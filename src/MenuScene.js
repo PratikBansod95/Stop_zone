@@ -5,15 +5,16 @@ class MenuScene extends Phaser.Scene {
 
   create() {
     this.modalOpen = false;
-    this.background = FX.createRadialBackground(this, -100);
+    this.stadiumBg = SportsVisuals.createBackground(this);
 
     const h = this.scale.height;
 
     this.title = this.add.text(0, 0, 'Stop Zone', UI.textStyle({
       fontSize: MobileLayout.fontSize(68, h),
       fontStyle: 'bold',
+      color: SportsConfig.colors.textWhite,
     })).setOrigin(0.5);
-    this.title.setShadow(0, 4, Theme.colors.secondary, 16, true, true);
+    this.title.setShadow(0, 4, SportsConfig.colors.scoreGlow, 16, true, true);
 
     this.subtitle = this.add.text(0, 0, 'Tap when the dot hits the zone', UI.textStyle({
       fontSize: MobileLayout.fontSize(24, h),
@@ -126,7 +127,7 @@ class MenuScene extends Phaser.Scene {
     const centerX = width / 2;
     const safe = MobileLayout.safeInsets(width, height);
 
-    this.background.resize(width, height);
+    this.stadiumBg.resize(width, height);
     this.title.setPosition(centerX, safe.top + height * 0.14);
     this.subtitle.setPosition(centerX, safe.top + height * 0.22);
     this.bestText.setPosition(centerX, safe.top + height * 0.28);

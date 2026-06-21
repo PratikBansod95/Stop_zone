@@ -18,6 +18,7 @@ class PlayScene extends Phaser.Scene {
     this.zoneCenter = 0.5;
     this.zoneHeightRatio = 0.18;
     this.shimmerPhase = 0;
+    this._lastProgress = 0;
   }
 
   getCurrentDuration() {
@@ -32,6 +33,11 @@ class PlayScene extends Phaser.Scene {
       0,
       1
     );
+  }
+
+  /** Visual-only speed readout derived from existing duration values. */
+  getSpeedMultiplier() {
+    return this.baseDuration / this.getCurrentDuration();
   }
 
   placeZone(normalizedCenter) {
@@ -51,7 +57,12 @@ class PlayScene extends Phaser.Scene {
 
   syncIndicatorPosition() {
     const y = Phaser.Math.Linear(this.trackTop, this.trackBottom, this.indicatorProgress || 0);
-    this.indicatorVisual.container.setPosition(this.trackCenterX, y);
+    const x = this.trackCenterX;
+    this.ballMarker.container.setPosition(x, y);
+
+    const dir = (this.indicatorProgress || 0) >= this._lastProgress ? 1 : -1;
+    this._lastProgress = this.indicatorProgress || 0;
+    this.ballMarker.updateTrail(x, y, dir);
   }
 
   startRound() {
@@ -68,8 +79,9 @@ class PlayScene extends Phaser.Scene {
     }
 
     this.indicatorProgress = 0;
+    this._lastProgress = 0;
     this.syncIndicatorPosition();
-    this.indicatorVisual.startPulse(this);
+    this.ballMarker.startPulse(this);
     this.playRoundIntro();
 
     const duration = this.getCurrentDuration();
@@ -88,8 +100,8 @@ class PlayScene extends Phaser.Scene {
       }.bind(this),
     });
 
-    this.roundText.setText('Round ' + (this.score + 1));
-    this.updateDifficultyBar();
+    this.updateSportsHUD();
+    this.updateSpeedDisplay();
   }
 
   onStopInput() {
@@ -105,10 +117,10 @@ class PlayScene extends Phaser.Scene {
       this.barTween.stop();
     }
 
-    this.indicatorVisual.stopPulse();
-    this.indicatorVisual.squashStretch(this);
+    this.ballMarker.stopPulse();
+    this.ballMarker.squashStretch(this);
 
-    const indicatorY = this.indicatorVisual.container.y;
+    const indicatorY = this.ballMarker.container.y;
     const zoneTop = this.zoneCenterY - this.zoneHeight / 2;
     const zoneBottom = this.zoneCenterY + this.zoneHeight / 2;
     const hit = indicatorY >= zoneTop && indicatorY <= zoneBottom;
@@ -122,8 +134,8 @@ class PlayScene extends Phaser.Scene {
 
   onHit() {
     this.score += 1;
-    this.scoreText.setText(String(this.score));
-    this.showFeedback('Perfect!', Theme.colors.zoneTop);
+    this.sportsHud.scoreValue.setText(String(this.score));
+    this.showFeedback('GOAL!', SportsConfig.colors.textGreen);
     this.playHitEffects();
 
     YouTubeBridge.onRoundScoreChanged(this.score);
@@ -139,8 +151,8 @@ class PlayScene extends Phaser.Scene {
 
   onMiss() {
     this.gameEnded = true;
-    this.showFeedback('Miss!', '#ff6b6b');
-    this.indicatorVisual.setMissColor();
+    this.showFeedback('MISS!', '#ff6b6b');
+    this.ballMarker.setMissColor();
     this.playMissEffects();
 
     this.time.delayedCall(700, function () {
@@ -175,11 +187,8 @@ class PlayScene extends Phaser.Scene {
     if (this.barTween) {
       this.barTween.stop();
     }
-    if (this.shimmerTween) {
-      this.shimmerTween.stop();
-    }
-    if (this.indicatorVisual) {
-      this.indicatorVisual.stopPulse();
+    if (this.ballMarker) {
+      this.ballMarker.stopPulse();
     }
     this.input.keyboard.off('keydown-SPACE', this.onStopInput, this);
     this.input.keyboard.off('keydown-ENTER', this.onStopInput, this);
@@ -197,7 +206,12 @@ class PlayScene extends Phaser.Scene {
 
   bindInput() {
     const self = this;
-    const ignore = [this.muteButton];
+    const ignore = [
+      this.muteButton,
+      this.bottomBar.rush.container,
+      this.bottomBar.focus.container,
+      this.sportsHud.pauseBtn.container,
+    ];
 
     MobileInput.bindSceneTap(this, function () {
       self.onStopInput();
@@ -215,81 +229,41 @@ class PlayScene extends Phaser.Scene {
   }
 
   // ===========================================================================
-  // MOBILE UI — layered track, glass HUD, tap prompt
+  // STADIUM VISUALS — sports reskin (safe to tweak in sportsVisuals.js)
   // ===========================================================================
 
   buildVisuals() {
     const h = this.scale.height;
 
-    this.background = FX.createRadialBackground(this, -100);
-
+    this.stadiumBg = SportsVisuals.createBackground(this);
     this.playGroup = this.add.container(0, 0).setDepth(10);
 
-    this.hudPanel = FX.createGlassPanel(this, 1, 1, 15);
-    this.scoreLabel = this.add.text(0, 0, 'SCORE', UI.textStyle({
-      fontSize: MobileLayout.fontSize(16, h),
-      color: Theme.colors.textMuted,
-      letterSpacing: 3,
-    })).setOrigin(0.5);
-    this.scoreText = this.add.text(0, 0, '0', UI.textStyle({
-      fontSize: MobileLayout.fontSize(52, h),
-      fontStyle: 'bold',
-      color: Theme.colors.zoneTop,
-    })).setOrigin(0.5);
-    FX.applyScoreGlow(this.scoreText);
-
-    this.bestHudText = this.add.text(0, 0, 'BEST ' + Storage.getBestScore(), UI.textStyle({
-      fontSize: MobileLayout.fontSize(18, h),
-      color: Theme.colors.highlight,
-      fontStyle: 'bold',
-    })).setOrigin(0.5);
-
-    this.roundText = this.add.text(0, 0, 'Round 1', UI.textStyle({
-      fontSize: MobileLayout.fontSize(20, h),
-      color: Theme.colors.textMuted,
-    })).setOrigin(0.5);
-
-    this.difficultyBarBg = this.add.graphics();
-    this.difficultyBarFill = this.add.graphics();
-
-    this.comboText = this.add.text(0, 0, '', UI.textStyle({
-      fontSize: MobileLayout.fontSize(26, h),
-      fontStyle: 'bold',
-      color: Theme.colors.highlight,
-    })).setOrigin(0.5).setAlpha(0).setScale(0.8);
-
-    this.trackVisuals = FX.createTrackVisuals(this);
-    this.indicatorVisual = FX.createIndicatorVisual(this, MobileLayout.s(52, h));
+    this.sportsHud = SportsVisuals.createHUD(this);
+    this.speedBadge = SportsVisuals.createSpeedBadge(this);
+    this.sportsTrack = SportsVisuals.createTrack(this);
+    this.ballMarker = SportsVisuals.createBallMarker(this, MobileLayout.s(44, h));
+    this.bottomBar = SportsVisuals.createBottomBar(this);
 
     this.feedbackText = this.add.text(0, 0, '', UI.textStyle({
       fontSize: MobileLayout.fontSize(40, h),
       fontStyle: 'bold',
-    })).setOrigin(0.5).setAlpha(0).setDepth(50);
+    })).setOrigin(0.5).setAlpha(0).setDepth(60);
 
-    this.tapPrompt = UI.createTapPrompt(this);
+    this.comboText = this.add.text(0, 0, '', UI.textStyle({
+      fontSize: MobileLayout.fontSize(26, h),
+      fontStyle: 'bold',
+      color: SportsConfig.colors.textGold,
+    })).setOrigin(0.5).setAlpha(0).setScale(0.8).setDepth(60);
 
-    // Layer: groove → solid target zone → knob on top (clean mobile read)
     this.playGroup.add([
-      this.trackVisuals.backContainer,
-      this.trackVisuals.zoneContainer,
-      this.indicatorVisual.container,
+      this.sportsTrack.laneContainer,
+      this.sportsTrack.zoneContainer,
+      this.ballMarker.container,
       this.feedbackText,
       this.comboText,
     ]);
 
     this.muteButton = UI.createMuteButton(this, 0, 0);
-
-    this.shimmerTween = this.tweens.add({
-      targets: this,
-      shimmerPhase: 1,
-      duration: 1400,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-      onUpdate: function () {
-        this.refreshTrackVisuals();
-      }.bind(this),
-    });
   }
 
   layout() {
@@ -297,83 +271,75 @@ class PlayScene extends Phaser.Scene {
     const height = this.scale.height;
     const centerX = width / 2;
     const safe = MobileLayout.safeInsets(width, height);
-    const trackWidth = MobileLayout.s(72, height);
-    const trackHeight = Math.min(height * 0.48, MobileLayout.s(560, height));
+    const trackWidth = MobileLayout.s(86, height);
+    const trackHeight = Math.min(height * 0.40, MobileLayout.s(460, height));
 
     this.trackWidth = trackWidth;
     this.trackHeight = trackHeight;
-    this.trackTop = safe.top + height * 0.22;
-    this.trackBottom = this.trackTop + trackHeight;
     this.trackCenterX = centerX;
     this.zoneHeight = trackHeight * this.zoneHeightRatio;
-    this.difficultyBarWidth = width * 0.42;
 
-    this.background.resize(width, height);
+    this.stadiumBg.resize(width, height);
 
-    const hudW = width * 0.88;
-    const hudH = MobileLayout.s(118, height);
-    const hudY = safe.top + hudH / 2 + MobileLayout.s(8, height);
-    this.hudPanel.draw(centerX, hudY, hudW, hudH);
+    const hudW = width * 0.92;
+    const hudH = MobileLayout.s(SportsConfig.visual.hudPanelHeight, height);
+    const hudTop = safe.top + MobileLayout.s(8, height);
+    this.sportsHud.layout(centerX, hudTop, hudW, hudH);
 
-    this.scoreLabel.setPosition(centerX - MobileLayout.s(80, height), hudY - MobileLayout.s(22, height));
-    this.scoreText.setPosition(centerX - MobileLayout.s(80, height), hudY + MobileLayout.s(12, height));
-    this.bestHudText.setPosition(centerX + MobileLayout.s(100, height), hudY);
-    this.roundText.setPosition(centerX, hudY + MobileLayout.s(46, height));
+    const progressBottom = hudTop + hudH + MobileLayout.s(
+      SportsConfig.visual.progressGap + 14,
+      height
+    );
+    this.trackTop = progressBottom + MobileLayout.s(SportsConfig.visual.trackGapAfterProgress, height);
+    this.trackBottom = this.trackTop + trackHeight;
 
-    const barY = hudY + MobileLayout.s(58, height);
-    const barX = centerX - this.difficultyBarWidth / 2;
-    this.difficultyBarY = barY;
-    this.difficultyBarX = barX;
+    const speedY = this.trackTop - MobileLayout.s(SportsConfig.visual.speedAboveTrack, height);
+    this.speedBadge.layout(centerX, speedY);
 
-    this.comboText.setPosition(centerX, this.trackTop - MobileLayout.s(36, height));
-    this.feedbackText.setPosition(centerX, this.trackTop - MobileLayout.s(70, height));
+    this.feedbackText.setPosition(centerX, speedY - MobileLayout.s(36, height));
+    this.comboText.setPosition(centerX, speedY - MobileLayout.s(18, height));
 
-    this.tapPrompt.redraw(centerX, height - safe.bottom - MobileLayout.s(36, height));
+    const bottomY = height - safe.bottom - MobileLayout.s(52, height);
+    this.bottomBar.layout(centerX, bottomY, width);
     this.muteButton.setPosition(width - safe.side - MobileLayout.s(24, height), safe.top + MobileLayout.s(24, height));
 
     this.refreshTrackVisuals();
     this.syncIndicatorPosition();
-    this.updateDifficultyBar();
+    this.updateSportsHUD();
+    this.updateSpeedDisplay();
+    this.sportsHud.playIntro(this);
   }
 
   refreshTrackVisuals() {
-    if (!this.trackVisuals || this.trackHeight === undefined) {
+    if (!this.sportsTrack || this.trackHeight === undefined) {
       return;
     }
 
     const trackY = this.trackTop + this.trackHeight / 2;
-    this.trackVisuals.drawGroove(this.trackCenterX, trackY, this.trackWidth, this.trackHeight);
+    this.sportsTrack.drawLane(this.trackCenterX, trackY, this.trackWidth, this.trackHeight);
 
     if (this.zoneCenterY !== undefined) {
-      this.trackVisuals.drawZone(
+      this.sportsTrack.drawZone(
         this.trackCenterX,
         this.zoneCenterY,
         this.trackWidth,
-        this.zoneHeight,
-        this.shimmerPhase || 0
+        this.zoneHeight
       );
     }
   }
 
-  updateDifficultyBar() {
-    const progress = this.getDifficultyProgress();
-    const barW = this.difficultyBarWidth || 200;
-    const fillW = Math.max(barW * progress, 0);
-    const barH = MobileLayout.s(8, this.scale.height);
-    const x = this.difficultyBarX;
-    const y = this.difficultyBarY;
-    const r = barH / 2;
+  updateSportsHUD() {
+    this.sportsHud.scoreValue.setText(String(this.score));
+    this.sportsHud.bestValue.setText(String(Storage.getBestScore()));
+    this.sportsHud.roundValue.setText(String(this.score + 1));
+    this.sportsHud.updateProgress(
+      Math.min(this.score, SportsConfig.progressDotCount),
+      SportsConfig.progressDotCount
+    );
+  }
 
-    this.difficultyBarBg.clear();
-    this.difficultyBarBg.fillStyle(Theme.colors.panel, 0.85);
-    this.difficultyBarBg.fillRoundedRect(x, y - barH / 2, barW, barH, r);
-
-    this.difficultyBarFill.clear();
-    if (fillW > 0) {
-      const color = FX.getDifficultyColor(progress);
-      this.difficultyBarFill.fillStyle(color, 1);
-      this.difficultyBarFill.fillRoundedRect(x, y - barH / 2, fillW, barH, r);
-    }
+  updateSpeedDisplay() {
+    this.speedBadge.setMultiplier(this.getSpeedMultiplier());
   }
 
   updateComboDisplay() {
@@ -410,22 +376,16 @@ class PlayScene extends Phaser.Scene {
 
   playHitEffects() {
     SoundManager.playSuccess();
-    FX.screenFlash(this, Theme.colors.flashHit, 160, 0.22);
-    FX.hitParticles(this, this.indicatorVisual.container.x, this.indicatorVisual.container.y);
+    FX.screenFlash(this, SportsConfig.colors.neonGreen, 160, 0.18);
+    FX.hitParticles(this, this.ballMarker.container.x, this.ballMarker.container.y);
     this.updateComboDisplay();
-
-    this.tweens.add({
-      targets: this.scoreText,
-      scale: 1.12,
-      duration: 100,
-      yoyo: true,
-      ease: 'Quad.easeOut',
-    });
+    SportsVisuals.animateScorePop(this, this.sportsHud.scoreValue);
+    this.updateSportsHUD();
   }
 
   playMissEffects() {
     SoundManager.playFail();
-    FX.screenFlash(this, Theme.colors.flashMiss, 220, 0.32);
+    FX.screenFlash(this, SportsConfig.colors.redGlow, 220, 0.28);
     FX.screenShake(this, 0.007, 240);
   }
 

@@ -3,6 +3,13 @@ class BootScene extends Phaser.Scene {
     super({ key: 'BootScene' });
   }
 
+  preload() {
+    if (SportsConfig.backgroundImage) {
+      this.load.image('stadium-bg', SportsConfig.backgroundImage);
+    }
+    SportsConfig.preloadIcons(this.load);
+  }
+
   create() {
     const width = this.scale.width;
     const height = this.scale.height;
@@ -10,20 +17,22 @@ class BootScene extends Phaser.Scene {
     const centerY = height / 2;
     const h = height;
 
-    this.background = FX.createRadialBackground(this, -100);
+    this.stadiumBg = SportsVisuals.createBackground(this);
+    this.stadiumBg.resize(width, height);
 
     this.title = this.add.text(centerX, centerY - MobileLayout.s(80, h), 'Stop Zone', UI.textStyle({
       fontSize: MobileLayout.fontSize(58, h),
       fontStyle: 'bold',
+      color: SportsConfig.colors.textWhite,
     })).setOrigin(0.5);
-    this.title.setShadow(0, 4, Theme.colors.secondary, 14, true, true);
+    this.title.setShadow(0, 4, SportsConfig.colors.scoreGlow, 14, true, true);
 
     this.statusText = this.add.text(centerX, centerY + MobileLayout.s(10, h), 'Loading...', UI.textStyle({
       fontSize: MobileLayout.fontSize(24, h),
-      color: Theme.colors.textMuted,
+      color: SportsConfig.colors.textMuted,
     })).setOrigin(0.5);
 
-    this.spinner = this.add.circle(centerX, centerY + MobileLayout.s(70, h), MobileLayout.s(10, h), Theme.colors.accent, 0.9);
+    this.spinner = this.add.circle(centerX, centerY + MobileLayout.s(70, h), MobileLayout.s(10, h), SportsConfig.colors.neonBlue, 0.9);
 
     this.tweens.add({
       targets: this.spinner,

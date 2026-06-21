@@ -23,7 +23,7 @@ const config = {
 const game = new Phaser.Game(config);
 window.__phaserGame = game;
 
-document.body.style.background = Theme.colors.bgCss;
+document.body.style.background = '#0a1628';
 
 if (MobileLayout.isMobile()) {
   document.body.classList.add('is-mobile');

@@ -13,96 +13,100 @@ class GameOverScene extends Phaser.Scene {
 
   create() {
     const h = this.scale.height;
-    this.background = FX.createRadialBackground(this, -100);
-    this.statsPanel = FX.createGlassPanel(this, 1, 1, 5);
+    const w = this.scale.width;
+    const C = SportsConfig.colors;
 
-    this.title = this.add.text(0, 0, 'Game Over', UI.textStyle({
-      fontSize: MobileLayout.fontSize(52, h),
+    this.stadiumBg = SportsVisuals.createBackground(this);
+    this.resultsPanel = SportsVisuals.createGameOverPanel(this);
+
+    this.title = this.add.text(0, 0, 'GAME OVER', UI.textStyle({
+      fontSize: MobileLayout.fontSize(44, h, w),
       fontStyle: 'bold',
-      color: '#ff6b6b',
+      color: C.textDanger,
+      letterSpacing: 4,
     })).setOrigin(0.5);
-    this.title.setShadow(0, 4, Theme.colors.danger, 14, true, true);
+    this.title.setShadow(0, 0, C.textDanger, 16, true, true);
 
     this.scoreLabel = this.add.text(0, 0, 'SCORE', UI.textStyle({
-      fontSize: MobileLayout.fontSize(16, h),
-      color: Theme.colors.textMuted,
+      fontSize: MobileLayout.fontSize(14, h, w),
+      color: C.textMuted,
       letterSpacing: 3,
     })).setOrigin(0.5);
 
     this.scoreValue = this.add.text(0, 0, String(this.finalScore), UI.textStyle({
-      fontSize: MobileLayout.fontSize(76, h),
+      fontSize: MobileLayout.fontSize(64, h, w),
       fontStyle: 'bold',
-      color: Theme.colors.zoneTop,
+      color: C.textWhite,
     })).setOrigin(0.5);
-    FX.applyScoreGlow(this.scoreValue);
+    this.scoreValue.setShadow(0, 0, C.scoreGlow, 18, true, true);
 
     this.bestLabel = this.add.text(0, 0, 'BEST', UI.textStyle({
-      fontSize: MobileLayout.fontSize(16, h),
-      color: Theme.colors.textMuted,
+      fontSize: MobileLayout.fontSize(14, h, w),
+      color: C.textMuted,
       letterSpacing: 3,
     })).setOrigin(0.5);
 
     this.bestValue = this.add.text(0, 0, String(this.bestScore), UI.textStyle({
-      fontSize: MobileLayout.fontSize(40, h),
+      fontSize: MobileLayout.fontSize(36, h, w),
       fontStyle: 'bold',
-      color: Theme.colors.highlight,
+      color: C.textGold,
     })).setOrigin(0.5);
 
     this.newBestBadge = this.add.text(0, 0, '★ NEW BEST', UI.textStyle({
-      fontSize: MobileLayout.fontSize(18, h),
+      fontSize: MobileLayout.fontSize(16, h, w),
       fontStyle: 'bold',
-      color: Theme.colors.secondary,
+      color: C.textGreen,
     })).setOrigin(0.5).setVisible(false);
+    this.newBestBadge.setShadow(0, 0, C.zoneGlow, 10, true, true);
+
+    this.dividerGfx = this.add.graphics();
 
     this.accuracyLabel = this.add.text(0, 0, 'ACCURACY', UI.textStyle({
-      fontSize: MobileLayout.fontSize(16, h),
-      color: Theme.colors.textMuted,
+      fontSize: MobileLayout.fontSize(13, h, w),
+      color: C.textMuted,
       letterSpacing: 2,
     })).setOrigin(0.5);
 
     this.accuracyValue = this.add.text(0, 0, this.accuracy + '%', UI.textStyle({
-      fontSize: MobileLayout.fontSize(36, h),
+      fontSize: MobileLayout.fontSize(28, h, w),
       fontStyle: 'bold',
-      color: Theme.colors.accent,
+      color: C.textCyan,
     })).setOrigin(0.5);
 
     this.statsLine = this.add.text(0, 0,
-      this.finalScore + ' hits · ' + this.attempts + ' tries',
+      this.finalScore + ' goals · ' + this.attempts + ' attempts',
       UI.textStyle({
-        fontSize: MobileLayout.fontSize(18, h),
-        color: Theme.colors.textMuted,
+        fontSize: MobileLayout.fontSize(17, h, w),
+        color: C.textMuted,
       })
     ).setOrigin(0.5);
 
     this.message = this.add.text(0, 0, 'Saving...', UI.textStyle({
-      fontSize: MobileLayout.fontSize(20, h),
-      color: Theme.colors.textMuted,
+      fontSize: MobileLayout.fontSize(20, h, w),
+      color: C.textCyan,
       align: 'center',
     })).setOrigin(0.5);
 
     this.playAgainButton = UI.createButton(this, 0, 0, 'Play Again', function () {
       this.restartGame();
     }.bind(this), {
-      width: Math.min(this.scale.width * 0.82, MobileLayout.s(340, h)),
-      height: MobileLayout.touchTarget(h) + 10,
-      fontSize: MobileLayout.fontSize(30, h),
-      color: SportsConfig.colors.neonBlue,
-      hoverColor: SportsConfig.colors.neonBlueDim,
-      textColor: SportsConfig.colors.textWhite,
+      width: Math.min(w * 0.82, MobileLayout.s(340, h, w)),
+      height: MobileLayout.touchTarget(h, w) + 10,
+      fontSize: MobileLayout.fontSize(28, h, w),
     });
 
-    this.menuButton = UI.createButton(this, 0, 0, 'Menu', function () {
+    this.menuButton = UI.createButton(this, 0, 0, 'Main Menu', function () {
       this.scene.start('MenuScene');
     }.bind(this), {
-      color: Theme.colors.buttonSecondary,
-      hoverColor: Theme.colors.buttonSecondaryHover,
-      textColor: Theme.colors.buttonSecondaryText,
-      fontSize: MobileLayout.fontSize(24, h),
-      width: Math.min(this.scale.width * 0.58, MobileLayout.s(240, h)),
-      height: MobileLayout.touchTarget(h),
+      color: C.glass,
+      hoverColor: C.neonBlueDim,
+      fillAlpha: 0.9,
+      textColor: C.textCyan,
+      strokeColor: C.neonBlue,
+      fontSize: MobileLayout.fontSize(22, h, w),
+      width: Math.min(w * 0.62, MobileLayout.s(260, h, w)),
+      height: MobileLayout.touchTarget(h, w),
     });
-
-    this.tapHint = UI.createTapPrompt(this, 'TAP TO PLAY AGAIN');
 
     this.muteButton = UI.createMuteButton(this, 0, 0);
 
@@ -132,6 +136,14 @@ class GameOverScene extends Phaser.Scene {
 
       if (isNew) {
         YouTubeBridge.sendScore(self.bestScore);
+        self.tweens.add({
+          targets: self.newBestBadge,
+          scale: 1.08,
+          duration: 400,
+          yoyo: true,
+          repeat: 2,
+          ease: 'Sine.easeInOut',
+        });
       }
     });
   }
@@ -152,18 +164,21 @@ class GameOverScene extends Phaser.Scene {
       this.scoreValue,
       this.bestValue,
       this.accuracyValue,
+      this.statsLine,
+      this.message,
       this.playAgainButton,
+      this.menuButton,
     ];
 
     items.forEach(function (item, index) {
       item.setAlpha(0);
-      item.setScale(0.9);
+      item.setScale(0.92);
       this.tweens.add({
         targets: item,
         alpha: 1,
         scale: 1,
-        duration: 260,
-        delay: index * 70,
+        duration: 280,
+        delay: index * 55,
         ease: 'Back.easeOut',
       });
     }, this);
@@ -191,25 +206,50 @@ class GameOverScene extends Phaser.Scene {
     const centerX = width / 2;
     const safe = MobileLayout.safeInsets(width, height);
     const panelW = width * 0.92;
-    const panelH = MobileLayout.s(280, height);
-    const panelY = height * 0.36;
+    const panelH = MobileLayout.s(300, height, width);
+    const panelY = safe.top + height * 0.38;
 
-    this.background.resize(width, height);
-    this.statsPanel.draw(centerX, panelY, panelW, panelH);
+    this.stadiumBg.resize(width, height);
+    this.resultsPanel.draw(centerX, panelY, panelW, panelH);
 
-    this.title.setPosition(centerX, safe.top + MobileLayout.s(48, height));
-    this.scoreLabel.setPosition(centerX - MobileLayout.s(80, height), panelY - MobileLayout.s(70, height));
-    this.scoreValue.setPosition(centerX - MobileLayout.s(80, height), panelY - MobileLayout.s(20, height));
-    this.bestLabel.setPosition(centerX + MobileLayout.s(80, height), panelY - MobileLayout.s(70, height));
-    this.bestValue.setPosition(centerX + MobileLayout.s(80, height), panelY - MobileLayout.s(20, height));
-    this.newBestBadge.setPosition(centerX, panelY + MobileLayout.s(20, height));
-    this.accuracyLabel.setPosition(centerX - MobileLayout.s(55, height), panelY + MobileLayout.s(70, height));
-    this.accuracyValue.setPosition(centerX + MobileLayout.s(35, height), panelY + MobileLayout.s(70, height));
-    this.statsLine.setPosition(centerX, panelY + MobileLayout.s(110, height));
-    this.message.setPosition(centerX, height * 0.56);
-    this.playAgainButton.setPosition(centerX, height * 0.68);
-    this.menuButton.setPosition(centerX, height * 0.78);
-    this.tapHint.redraw(centerX, height - safe.bottom - MobileLayout.s(36, height));
+    const colOffset = Math.min(width * 0.22, MobileLayout.s(88, height, width));
+    const row1 = panelY - MobileLayout.s(72, height, width);
+    const row2 = panelY - MobileLayout.s(18, height, width);
+    const row3 = panelY + MobileLayout.s(42, height, width);
+    const row4 = panelY + MobileLayout.s(88, height, width);
+    const row5 = panelY + MobileLayout.s(118, height, width);
+
+    this.title.setPosition(centerX, safe.top + MobileLayout.s(36, height, width));
+    this.title.setFontSize(MobileLayout.fontSize(44, height, width));
+
+    this.scoreLabel.setPosition(centerX - colOffset, row1);
+    this.scoreValue.setPosition(centerX - colOffset, row2);
+    this.scoreValue.setFontSize(MobileLayout.fontSize(64, height, width));
+
+    this.bestLabel.setPosition(centerX + colOffset, row1);
+    this.bestValue.setPosition(centerX + colOffset, row2);
+    this.bestValue.setFontSize(MobileLayout.fontSize(36, height, width));
+
+    this.newBestBadge.setPosition(centerX, row3);
+
+    this.dividerGfx.clear();
+    this.dividerGfx.lineStyle(1, SportsConfig.colors.neonBlue, 0.35);
+    this.dividerGfx.beginPath();
+    this.dividerGfx.moveTo(centerX - panelW * 0.38, row3 + MobileLayout.s(14, height, width));
+    this.dividerGfx.lineTo(centerX + panelW * 0.38, row3 + MobileLayout.s(14, height, width));
+    this.dividerGfx.strokePath();
+
+    this.accuracyLabel.setPosition(centerX - MobileLayout.s(52, height, width), row4);
+    this.accuracyValue.setPosition(centerX + MobileLayout.s(42, height, width), row4);
+    this.statsLine.setPosition(centerX, row5);
+
+    this.message.setPosition(centerX, panelY + panelH / 2 + MobileLayout.s(36, height, width));
+
+    const btnY1 = Math.min(height - safe.bottom - MobileLayout.s(120, height, width), panelY + panelH / 2 + MobileLayout.s(88, height, width));
+    const btnY2 = btnY1 + MobileLayout.s(62, height, width);
+    this.playAgainButton.setPosition(centerX, btnY1);
+    this.menuButton.setPosition(centerX, btnY2);
+
     UI.layoutMuteButton(this.muteButton, safe, width, height, 'bottom-left');
   }
 

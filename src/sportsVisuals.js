@@ -7,7 +7,8 @@
 //   3. Speed badge
 //   4. Main track lane + target zone
 //   5. Soccer ball marker + motion trail
-//   6. Shared glow / glass helpers
+//   6. Game over results panel
+//   7. Shared glow / glass helpers
 // =============================================================================
 
 const SportsVisuals = {
@@ -528,7 +529,21 @@ const SportsVisuals = {
   },
 
   // ===========================================================================
-  // 6. SHARED HELPERS — glass panels, glow strokes, icons, text styles
+  // 6. GAME OVER — results glass panel (matches HUD styling)
+  // ===========================================================================
+
+  createGameOverPanel(scene) {
+    const panelGfx = scene.add.graphics().setDepth(20);
+    return {
+      panelGfx: panelGfx,
+      draw: function (cx, cy, w, h) {
+        SportsVisuals._drawGlassPanel(panelGfx, cx, cy, w, h, SportsVisuals.C.neonBlue);
+      },
+    };
+  },
+
+  // ===========================================================================
+  // 7. SHARED HELPERS — glass panels, glow strokes, icons, text styles
   // ===========================================================================
 
   _createIcon(scene, name, size, tint) {

@@ -53,6 +53,7 @@ const SportsConfig = {
     textCyan: '#00e5ff',
     textGold: '#ffd700',
     textGreen: '#39ff14',
+    textDanger: '#ff6b6b',
     scoreGlow: '#00b4ff',
     zoneGlow: '#39ff14',
   },
@@ -63,8 +64,12 @@ const SportsConfig = {
     progressGap: 14,
     speedAboveTrack: 16,
     trackGapAfterProgress: 26,
-    trackInnerRatio: 0.68,
-    railCoreWidth: 4,
+    /** Outer lane width in design px (rails included). */
+    trackWidthDesign: 152,
+    /** Max lane width as fraction of screen width. */
+    trackWidthScreenRatio: 0.46,
+    trackInnerRatio: 0.82,
+    railCoreWidth: 5,
     laneGlowAlpha: 0.2,
     zoneHoneycombAlpha: 0.22,
     zoneHoneycombSize: 7,

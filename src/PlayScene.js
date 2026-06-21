@@ -268,7 +268,10 @@ class PlayScene extends Phaser.Scene {
     const height = this.scale.height;
     const centerX = width / 2;
     const safe = MobileLayout.safeInsets(width, height);
-    const trackWidth = MobileLayout.s(100, height, width);
+    const trackWidth = Math.min(
+      width * SportsConfig.visual.trackWidthScreenRatio,
+      MobileLayout.s(SportsConfig.visual.trackWidthDesign, height, width)
+    );
     const minTrackH = MobileLayout.s(180, height, width);
 
     this.trackWidth = trackWidth;

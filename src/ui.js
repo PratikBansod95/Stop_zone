@@ -6,7 +6,7 @@ const UI = {
   textStyle(overrides) {
     return Object.assign({
       fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-      color: Theme.colors.text,
+      color: SportsConfig.colors.textWhite,
     }, overrides);
   },
 
@@ -15,14 +15,15 @@ const UI = {
     const height = this.scale.height;
     const width = options.width || Math.min(this.scale.width * 0.72, MobileLayout.s(320, height));
     const btnHeight = options.height || MobileLayout.touchTarget(height);
-    const fillColor = options.color || Theme.colors.buttonPrimary;
-    const hoverColor = options.hoverColor || Theme.colors.buttonPrimaryHover;
-    const textColor = options.textColor || Theme.colors.buttonPrimaryText;
+    const fillColor = options.color !== undefined ? options.color : SportsConfig.colors.neonBlue;
+    const hoverColor = options.hoverColor !== undefined ? options.hoverColor : SportsConfig.colors.neonBlueDim;
+    const textColor = options.textColor || SportsConfig.colors.textWhite;
+    const strokeColor = options.strokeColor || SportsConfig.colors.neonBlue;
 
     const container = scene.add.container(x, y);
 
-    const bg = scene.add.rectangle(0, 0, width, btnHeight, fillColor, 1);
-    bg.setStrokeStyle(2, 0xffffff, 0.22);
+    const bg = scene.add.rectangle(0, 0, width, btnHeight, fillColor, options.fillAlpha !== undefined ? options.fillAlpha : 1);
+    bg.setStrokeStyle(2, strokeColor, 0.75);
 
     const text = scene.add.text(0, 0, label, UI.textStyle({
       fontSize: options.fontSize || MobileLayout.fontSize(30, height),
@@ -65,13 +66,13 @@ const UI = {
     const w = Math.min(scene.scale.width * 0.88, MobileLayout.s(420, height));
     const h = MobileLayout.touchTarget(height);
     const container = scene.add.container(0, 0).setDepth(40);
-    const bg = scene.add.rectangle(0, 0, w, h, Theme.colors.glass || Theme.colors.panel, 0.55);
-    bg.setStrokeStyle(2, Theme.colors.accent, 0.45);
+    const bg = scene.add.rectangle(0, 0, w, h, SportsConfig.colors.glass, 0.7);
+    bg.setStrokeStyle(2, SportsConfig.colors.neonBlue, 0.55);
 
     const text = scene.add.text(0, 0, label, UI.textStyle({
       fontSize: MobileLayout.fontSize(22, height),
       fontStyle: 'bold',
-      color: Theme.colors.text,
+      color: SportsConfig.colors.textCyan,
       letterSpacing: 2,
     })).setOrigin(0.5);
 
@@ -121,8 +122,8 @@ const UI = {
     const size = MobileLayout.touchTarget(scene.scale.height) * 0.78;
     const container = scene.add.container(x, y).setDepth(300);
 
-    const bg = scene.add.circle(0, 0, size / 2, Theme.colors.glass || Theme.colors.panel, 0.88);
-    bg.setStrokeStyle(2, Theme.colors.accent, 0.45);
+    const bg = scene.add.circle(0, 0, size / 2, SportsConfig.colors.glass, 0.92);
+    bg.setStrokeStyle(2, SportsConfig.colors.neonBlue, 0.65);
 
     const icon = scene.add.text(0, 0, SoundManager.isMuted() ? '🔇' : '🔊', {
       fontSize: MobileLayout.fontSize(22, scene.scale.height),

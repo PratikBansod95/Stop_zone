@@ -42,9 +42,11 @@ class MenuScene extends Phaser.Scene {
     this.helpButton = UI.createButton(this, 0, 0, 'How to Play', function () {
       this.openHelpModal();
     }.bind(this), {
-      color: Theme.colors.buttonSecondary,
-      hoverColor: Theme.colors.buttonSecondaryHover,
-      textColor: Theme.colors.buttonSecondaryText,
+      color: SportsConfig.colors.glass,
+      hoverColor: SportsConfig.colors.neonBlueDim,
+      fillAlpha: 0.9,
+      textColor: SportsConfig.colors.textCyan,
+      strokeColor: SportsConfig.colors.neonBlue,
       fontSize: MobileLayout.fontSize(24, h),
       width: Math.min(this.scale.width * 0.68, MobileLayout.s(280, h)),
       height: MobileLayout.touchTarget(h),

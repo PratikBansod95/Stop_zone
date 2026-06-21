@@ -533,11 +533,18 @@ const SportsVisuals = {
   // ===========================================================================
 
   createGameOverPanel(scene) {
-    const panelGfx = scene.add.graphics().setDepth(20);
+    const panelGfx = scene.add.graphics();
     return {
       panelGfx: panelGfx,
       draw: function (cx, cy, w, h) {
-        SportsVisuals._drawGlassPanel(panelGfx, cx, cy, w, h, SportsVisuals.C.neonBlue);
+        panelGfx.clear();
+        panelGfx.fillStyle(SportsVisuals.C.glass, 0.92);
+        panelGfx.fillRoundedRect(cx - w / 2, cy - h / 2, w, h, 18);
+        panelGfx.fillStyle(0x000000, 0.35);
+        panelGfx.fillRoundedRect(cx - w / 2 + 4, cy - h / 2 + 4, w - 8, h - 8, 16);
+        panelGfx.fillStyle(0xffffff, 0.05);
+        panelGfx.fillRoundedRect(cx - w / 2 + 2, cy - h / 2 + 2, w - 4, h * 0.4, 16);
+        SportsVisuals._strokeGlowRect(panelGfx, cx - w / 2, cy - h / 2, w, h, 18, SportsVisuals.C.neonBlue, 1);
       },
     };
   },

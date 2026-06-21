@@ -65,9 +65,9 @@ const SportsConfig = {
     speedAboveTrack: 16,
     trackGapAfterProgress: 26,
     /** Outer lane width in design px (rails included). */
-    trackWidthDesign: 152,
+    trackWidthDesign: 130,
     /** Max lane width as fraction of screen width. */
-    trackWidthScreenRatio: 0.46,
+    trackWidthScreenRatio: 0.40,
     trackInnerRatio: 0.82,
     railCoreWidth: 5,
     laneGlowAlpha: 0.2,

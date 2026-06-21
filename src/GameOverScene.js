@@ -17,7 +17,11 @@ class GameOverScene extends Phaser.Scene {
     const C = SportsConfig.colors;
 
     this.stadiumBg = SportsVisuals.createBackground(this);
+    this.stadiumBg.container.setDepth(-100);
+
+    this.uiLayer = this.add.container(0, 0).setDepth(10);
     this.resultsPanel = SportsVisuals.createGameOverPanel(this);
+    this.uiLayer.add(this.resultsPanel.panelGfx);
 
     this.title = this.add.text(0, 0, 'GAME OVER', UI.textStyle({
       fontSize: MobileLayout.fontSize(44, h, w),
@@ -60,6 +64,7 @@ class GameOverScene extends Phaser.Scene {
     this.newBestBadge.setShadow(0, 0, C.zoneGlow, 10, true, true);
 
     this.dividerGfx = this.add.graphics();
+    this.uiLayer.add(this.dividerGfx);
 
     this.accuracyLabel = this.add.text(0, 0, 'ACCURACY', UI.textStyle({
       fontSize: MobileLayout.fontSize(13, h, w),
@@ -109,6 +114,21 @@ class GameOverScene extends Phaser.Scene {
     });
 
     this.muteButton = UI.createMuteButton(this, 0, 0);
+
+    this.uiLayer.add([
+      this.title,
+      this.scoreLabel,
+      this.scoreValue,
+      this.bestLabel,
+      this.bestValue,
+      this.newBestBadge,
+      this.accuracyLabel,
+      this.accuracyValue,
+      this.statsLine,
+      this.message,
+      this.playAgainButton,
+      this.menuButton,
+    ]);
 
     this.layout();
     this.bindInput();

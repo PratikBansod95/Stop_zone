@@ -146,6 +146,19 @@ const UI = {
     return container;
   },
 
+  /** Place mute control in a corner away from the HUD scoreboard. */
+  layoutMuteButton(container, safe, width, height, corner) {
+    corner = corner || 'bottom-left';
+    const size = MobileLayout.touchTarget(height) * 0.78;
+    const pad = MobileLayout.s(14, height);
+
+    if (corner === 'bottom-left') {
+      container.setPosition(safe.side + pad + size / 2, height - safe.bottom - pad - size / 2);
+    } else {
+      container.setPosition(width - safe.side - pad - size / 2, height - safe.bottom - pad - size / 2);
+    }
+  },
+
   get scale() {
     return window.__phaserGame ? window.__phaserGame.scale : { width: 720, height: 1280 };
   },

@@ -208,8 +208,6 @@ class PlayScene extends Phaser.Scene {
     const self = this;
     const ignore = [
       this.muteButton,
-      this.bottomBar.rush.container,
-      this.bottomBar.focus.container,
       this.sportsHud.pauseBtn.container,
     ];
 
@@ -241,8 +239,7 @@ class PlayScene extends Phaser.Scene {
     this.sportsHud = SportsVisuals.createHUD(this);
     this.speedBadge = SportsVisuals.createSpeedBadge(this);
     this.sportsTrack = SportsVisuals.createTrack(this);
-    this.ballMarker = SportsVisuals.createBallMarker(this, MobileLayout.s(44, h));
-    this.bottomBar = SportsVisuals.createBottomBar(this);
+    this.ballMarker = SportsVisuals.createBallMarker(this, MobileLayout.s(46, h));
 
     this.feedbackText = this.add.text(0, 0, '', UI.textStyle({
       fontSize: MobileLayout.fontSize(40, h),
@@ -271,13 +268,11 @@ class PlayScene extends Phaser.Scene {
     const height = this.scale.height;
     const centerX = width / 2;
     const safe = MobileLayout.safeInsets(width, height);
-    const trackWidth = MobileLayout.s(86, height);
-    const trackHeight = Math.min(height * 0.40, MobileLayout.s(460, height));
+    const trackWidth = MobileLayout.s(100, height);
 
     this.trackWidth = trackWidth;
-    this.trackHeight = trackHeight;
     this.trackCenterX = centerX;
-    this.zoneHeight = trackHeight * this.zoneHeightRatio;
+    this.zoneHeight = 0;
 
     this.stadiumBg.resize(width, height);
 
@@ -287,11 +282,13 @@ class PlayScene extends Phaser.Scene {
     this.sportsHud.layout(centerX, hudTop, hudW, hudH);
 
     const progressBottom = hudTop + hudH + MobileLayout.s(
-      SportsConfig.visual.progressGap + 14,
+      SportsConfig.visual.progressGap + 12,
       height
     );
     this.trackTop = progressBottom + MobileLayout.s(SportsConfig.visual.trackGapAfterProgress, height);
-    this.trackBottom = this.trackTop + trackHeight;
+    this.trackBottom = height - safe.bottom - MobileLayout.s(16, height);
+    this.trackHeight = this.trackBottom - this.trackTop;
+    this.zoneHeight = this.trackHeight * this.zoneHeightRatio;
 
     const speedY = this.trackTop - MobileLayout.s(SportsConfig.visual.speedAboveTrack, height);
     this.speedBadge.layout(centerX, speedY);
@@ -299,9 +296,7 @@ class PlayScene extends Phaser.Scene {
     this.feedbackText.setPosition(centerX, speedY - MobileLayout.s(36, height));
     this.comboText.setPosition(centerX, speedY - MobileLayout.s(18, height));
 
-    const bottomY = height - safe.bottom - MobileLayout.s(52, height);
-    this.bottomBar.layout(centerX, bottomY, width);
-    this.muteButton.setPosition(width - safe.side - MobileLayout.s(24, height), safe.top + MobileLayout.s(24, height));
+    UI.layoutMuteButton(this.muteButton, safe, width, height, 'bottom-left');
 
     this.refreshTrackVisuals();
     this.syncIndicatorPosition();

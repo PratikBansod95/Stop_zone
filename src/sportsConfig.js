@@ -20,9 +20,6 @@ const SportsConfig = {
   /** Number of progress dots shown below the HUD bar. */
   progressDotCount: 8,
 
-  /** Placeholder power-up uses shown on RUSH / FOCUS buttons. */
-  powerUpUses: 3,
-
   /**
    * Icon texture keys → file paths (preloaded in BootScene).
    * Keys are used in sportsVisuals.js — change paths here to swap art.
@@ -31,9 +28,6 @@ const SportsConfig = {
     trophy: { key: 'icon-trophy', path: 'assets/icons/trophy.png' },
     pause: { key: 'icon-pause', path: 'assets/icons/pause.png' },
     speed: { key: 'icon-speed', path: 'assets/icons/speed.png' },
-    cleat: { key: 'icon-cleat', path: 'assets/icons/cleat.png' },
-    rush: { key: 'icon-rush', path: 'assets/icons/rush.png' },
-    focus: { key: 'icon-focus', path: 'assets/icons/focus.png' },
     ball: { key: 'icon-ball', path: 'assets/icons/ball.png' },
   },
 
@@ -66,18 +60,20 @@ const SportsConfig = {
   /** Visual tuning — glow intensity & spacing (safe to tweak). */
   visual: {
     hudPanelHeight: 84,
-    progressGap: 16,
-    speedAboveTrack: 18,
-    trackGapAfterProgress: 34,
-    laneGlowAlpha: 0.16,
+    progressGap: 14,
+    speedAboveTrack: 16,
+    trackGapAfterProgress: 26,
+    trackInnerRatio: 0.68,
+    railCoreWidth: 4,
+    laneGlowAlpha: 0.2,
     zoneHoneycombAlpha: 0.22,
     zoneHoneycombSize: 7,
   },
 
   /**
    * Icon attribution (free stock sources):
-   * - Kenney.nl Game Icons (CC0): trophy, pause, rush, focus, speed
-   * - game-icons.net (CC BY 3.0): ball, cleat — https://game-icons.net
+   * - Kenney.nl Game Icons (CC0): trophy, pause, speed
+   * - game-icons.net (CC BY 3.0): ball — https://game-icons.net
    */
   preloadIcons: function (loader) {
     const icons = this.icons;

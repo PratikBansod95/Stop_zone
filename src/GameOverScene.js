@@ -207,7 +207,7 @@ class GameOverScene extends Phaser.Scene {
     this.playAgainButton.setPosition(centerX, height * 0.68);
     this.menuButton.setPosition(centerX, height * 0.78);
     this.tapHint.redraw(centerX, height - safe.bottom - MobileLayout.s(36, height));
-    this.muteButton.setPosition(width - safe.side - MobileLayout.s(24, height), safe.top + MobileLayout.s(24, height));
+    UI.layoutMuteButton(this.muteButton, safe, width, height, 'bottom-left');
   }
 
   bindInput() {

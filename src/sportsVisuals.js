@@ -7,8 +7,7 @@
 //   3. Speed badge
 //   4. Main track lane + target zone
 //   5. Soccer ball marker + motion trail
-//   6. Bottom action bar + power-up placeholders
-//   7. Shared glow / glass helpers
+//   6. Shared glow / glass helpers
 // =============================================================================
 
 const SportsVisuals = {
@@ -338,6 +337,10 @@ const SportsVisuals = {
         const w = p.w;
         const h = p.h;
         const drift = this.chevronDrift.offset;
+        const innerW = w * SportsConfig.visual.trackInnerRatio;
+        const railW = SportsConfig.visual.railCoreWidth;
+        const capR = Math.max(railW * 2, 10);
+        const bloom = SportsConfig.visual.laneGlowAlpha;
 
         laneGlow.clear();
         laneFill.clear();
@@ -345,28 +348,22 @@ const SportsVisuals = {
         laneRight.clear();
         chevrons.clear();
 
-        const r = 20;
-        const bloom = SportsConfig.visual.laneGlowAlpha;
-
+        laneGlow.fillStyle(SportsVisuals.C.neonBlue, bloom * 0.65);
+        laneGlow.fillRoundedRect(x - innerW / 2 - 18, y - h / 2 - 6, innerW + 36, h + 12, capR + 6);
         laneGlow.fillStyle(SportsVisuals.C.neonBlue, bloom);
-        laneGlow.fillRoundedRect(x - w / 2 - 14, y - h / 2 - 14, w + 28, h + 28, r + 8);
-        laneGlow.fillStyle(SportsVisuals.C.neonBlue, bloom * 0.55);
-        laneGlow.fillRoundedRect(x - w / 2 - 6, y - h / 2 - 6, w + 12, h + 12, r + 3);
+        laneGlow.fillRoundedRect(x - innerW / 2 - 10, y - h / 2 - 2, innerW + 20, h + 4, capR + 2);
 
-        laneFill.fillStyle(SportsVisuals.C.navyDark, 0.62);
-        laneFill.fillRoundedRect(x - w / 2, y - h / 2, w, h, r);
+        laneFill.fillStyle(SportsVisuals.C.navyDark, 0.72);
+        laneFill.fillRoundedRect(x - innerW / 2 + 2, y - h / 2 + capR, innerW - 4, h - capR * 2, capR - 2);
+        laneFill.fillStyle(0x000000, 0.28);
+        laneFill.fillRoundedRect(x - innerW / 2 + 8, y - h / 2 + capR + 4, innerW - 16, h - capR * 2 - 8, capR - 4);
 
-        const railW = 5;
-        laneLeft.fillStyle(SportsVisuals.C.neonBlue, 1);
-        laneLeft.fillRoundedRect(x - w / 2 - 3, y - h / 2, railW, h, 3);
-        laneRight.fillStyle(SportsVisuals.C.neonBlue, 1);
-        laneRight.fillRoundedRect(x + w / 2 - railW + 3, y - h / 2, railW, h, 3);
+        const leftX = x - innerW / 2 - railW;
+        const rightX = x + innerW / 2;
+        SportsVisuals._drawNeonRail(laneLeft, leftX, y - h / 2, railW, h, capR);
+        SportsVisuals._drawNeonRail(laneRight, rightX, y - h / 2, railW, h, capR);
 
-        laneLeft.fillStyle(SportsVisuals.C.neonBlue, 0.25);
-        laneLeft.fillRoundedRect(x - w / 2 - 8, y - h / 2, railW + 10, h, 4);
-        laneRight.fillRoundedRect(x + w / 2 - railW - 5, y - h / 2, railW + 10, h, 4);
-
-        SportsVisuals._drawChevrons(chevrons, x, y + drift, w - 20, h);
+        SportsVisuals._drawChevrons(chevrons, x, y + drift, innerW - 16, h);
       },
 
       drawZone: function (x, y, w, zh) {
@@ -374,7 +371,8 @@ const SportsVisuals = {
         zoneGfx.clear();
         zoneLabel.setPosition(x, y);
 
-        const zw = w - 20;
+        const innerW = w * SportsConfig.visual.trackInnerRatio;
+        const zw = innerW - 10;
         const zh2 = zh;
         const zx = x - zw / 2;
         const zy = y - zh2 / 2;
@@ -441,7 +439,7 @@ const SportsVisuals = {
   createBallMarker(scene, diameter) {
     const container = scene.add.container(0, 0);
     const trailGfx = scene.add.graphics();
-    const redGlow = scene.add.circle(0, 0, diameter * 0.7, SportsVisuals.C.redGlow, 0.35);
+    const redGlow = scene.add.circle(0, 0, diameter * 0.85, SportsVisuals.C.redGlow, 0.42);
     const ball = this._createIcon(scene, 'ball', diameter)
       || scene.add.text(0, 0, '⚽', { fontSize: diameter + 'px' }).setOrigin(0.5);
     if (ball.setShadow) {
@@ -460,16 +458,31 @@ const SportsVisuals = {
       updateTrail: function (x, y, direction) {
         const history = container.trailHistory;
         history.unshift({ x: x, y: y, dir: direction });
-        if (history.length > 6) {
+        if (history.length > 8) {
           history.pop();
         }
 
         trailGfx.clear();
+        const behind = -direction;
+
         history.forEach(function (pt, i) {
-          const alpha = 0.35 - i * 0.05;
-          const offset = (i + 1) * 8 * (pt.dir || 1);
-          trailGfx.fillStyle(SportsVisuals.C.redGlow, Math.max(alpha, 0));
-          trailGfx.fillCircle(pt.x, pt.y + offset, diameter * 0.28 - i * 2);
+          const alpha = 0.42 - i * 0.045;
+          const stretch = (i + 1) * 11;
+          const yEnd = pt.y + behind * stretch;
+          const width = Math.max(1.5, 3.5 - i * 0.35);
+
+          trailGfx.lineStyle(width, SportsVisuals.C.redGlow, Math.max(alpha, 0.05));
+          trailGfx.beginPath();
+          trailGfx.moveTo(pt.x - 5, yEnd);
+          trailGfx.lineTo(pt.x - 5, pt.y);
+          trailGfx.strokePath();
+          trailGfx.beginPath();
+          trailGfx.moveTo(pt.x + 5, yEnd);
+          trailGfx.lineTo(pt.x + 5, pt.y);
+          trailGfx.strokePath();
+
+          trailGfx.fillStyle(SportsVisuals.C.redGlow, Math.max(alpha * 0.35, 0));
+          trailGfx.fillCircle(pt.x, pt.y + behind * (stretch * 0.45), diameter * 0.22 - i * 1.5);
         });
       },
 
@@ -515,68 +528,7 @@ const SportsVisuals = {
   },
 
   // ===========================================================================
-  // 6. BOTTOM ACTION BAR — tap prompt + power-up placeholders
-  // ===========================================================================
-
-  createBottomBar(scene) {
-    const container = scene.add.container(0, 0).setDepth(45);
-    const h = scene.scale.height;
-
-    const rush = this._createPowerUpButton(scene, 'rush', 'RUSH', SportsConfig.powerUpUses, function () {
-      console.log('[Stop Zone] RUSH power-up tapped — hook logic here');
-    });
-    const focus = this._createPowerUpButton(scene, 'focus', 'FOCUS', SportsConfig.powerUpUses, function () {
-      console.log('[Stop Zone] FOCUS power-up tapped — hook logic here');
-    });
-
-    const mainH = MobileLayout.s(72, h);
-    const mainBg = scene.add.graphics();
-    const cleatSize = MobileLayout.s(28, h);
-    const cleat = this._createIcon(scene, 'cleat', cleatSize, this.C.cyan)
-      || scene.add.text(0, 0, '👟', { fontSize: cleatSize + 'px' }).setOrigin(0.5);
-    const mainLine1 = scene.add.text(0, 0, 'TAP ANYWHERE', {
-      fontFamily: 'Arial,sans-serif',
-      fontSize: MobileLayout.fontSize(18, h),
-      fontStyle: 'bold',
-      color: SportsConfig.colors.textWhite,
-    }).setOrigin(0.5);
-    const mainLine2 = scene.add.text(0, 0, 'TO STOP', {
-      fontFamily: 'Arial,sans-serif',
-      fontSize: MobileLayout.fontSize(14, h),
-      color: SportsConfig.colors.textCyan,
-    }).setOrigin(0.5);
-
-    container.add([rush.container, mainBg, cleat, mainLine1, mainLine2, focus.container]);
-
-    return {
-      container: container,
-      rush: rush,
-      focus: focus,
-      mainBg: mainBg,
-
-      layout: function (cx, y, screenW) {
-        container.setPosition(0, 0);
-        const mainW = screenW * 0.52;
-        const sideW = MobileLayout.s(64, h);
-        const gap = MobileLayout.s(10, h);
-
-        mainBg.clear();
-        mainBg.fillStyle(SportsVisuals.C.glass, 0.85);
-        mainBg.fillRoundedRect(cx - mainW / 2, y - mainH / 2, mainW, mainH, 16);
-        SportsVisuals._strokeGlowRect(mainBg, cx - mainW / 2, y - mainH / 2, mainW, mainH, 16, SportsVisuals.C.neonBlue, 1);
-
-        cleat.setPosition(cx, y - MobileLayout.s(14, h));
-        mainLine1.setPosition(cx, y + MobileLayout.s(6, h));
-        mainLine2.setPosition(cx, y + MobileLayout.s(24, h));
-
-        rush.container.setPosition(cx - mainW / 2 - gap - sideW / 2, y);
-        focus.container.setPosition(cx + mainW / 2 + gap + sideW / 2, y);
-      },
-    };
-  },
-
-  // ===========================================================================
-  // 7. SHARED HELPERS — glass panels, glow strokes, icons, text styles
+  // 6. SHARED HELPERS — glass panels, glow strokes, icons, text styles
   // ===========================================================================
 
   _createIcon(scene, name, size, tint) {
@@ -653,6 +605,17 @@ const SportsVisuals = {
     };
   },
 
+  _drawNeonRail(gfx, x, y, w, h, capR) {
+    gfx.fillStyle(SportsVisuals.C.neonBlue, 0.18);
+    gfx.fillRoundedRect(x - 5, y, w + 10, h, capR + 4);
+    gfx.fillStyle(SportsVisuals.C.neonBlue, 0.45);
+    gfx.fillRoundedRect(x - 2, y + 2, w + 4, h - 4, capR + 1);
+    gfx.fillStyle(SportsVisuals.C.neonBlue, 1);
+    gfx.fillRoundedRect(x, y + capR * 0.5, w, h - capR, capR);
+    gfx.fillStyle(0xffffff, 0.35);
+    gfx.fillRoundedRect(x + 1, y + capR, Math.max(1, w - 2), h - capR * 2, capR - 1);
+  },
+
   _drawGlassPanel(gfx, cx, cy, w, h, borderColor) {
     gfx.clear();
     gfx.fillStyle(SportsVisuals.C.glass, 0.82);
@@ -724,13 +687,22 @@ const SportsVisuals = {
 
   _drawChevrons(gfx, cx, cy, w, h) {
     gfx.clear();
-    const color = SportsVisuals.C.neonBlueDim;
-    const rows = 7;
-    for (let i = 0; i < rows; i++) {
-      const y = cy - h / 2 + (h / (rows + 1)) * (i + 1);
-      gfx.fillStyle(color, 0.28);
-      this._drawChevronUp(gfx, cx, y - 6, 9);
-      this._drawChevronDown(gfx, cx, y + 6, 9);
+    const upColor = SportsVisuals.C.neonBlue;
+    const downColor = SportsVisuals.C.neonBlueDim;
+    const rowsPerHalf = 5;
+    const halfH = h / 2;
+
+    for (let i = 0; i < rowsPerHalf; i++) {
+      const t = (i + 1) / (rowsPerHalf + 1);
+      const yUp = cy - halfH + halfH * t;
+      const yDown = cy + halfH * t;
+      const size = 8 + (i % 2);
+
+      gfx.fillStyle(upColor, 0.22 + (i % 2) * 0.08);
+      this._drawChevronUp(gfx, cx, yUp, size);
+
+      gfx.fillStyle(downColor, 0.22 + (i % 2) * 0.08);
+      this._drawChevronDown(gfx, cx, yDown, size);
     }
   },
 
@@ -774,42 +746,6 @@ const SportsVisuals = {
     MobileInput.bindTap(bg, onClick);
     bg.setStrokeStyle(2, SportsVisuals.C.neonBlue, 0.8);
     return { container: container, bg: bg, icon: icon };
-  },
-
-  _createPowerUpButton(scene, iconName, name, count, onClick) {
-    const h = scene.scale.height;
-    const size = MobileLayout.s(64, h);
-    const container = scene.add.container(0, 0);
-    const bg = scene.add.graphics();
-    const iconSize = MobileLayout.s(26, h);
-    const iconImg = this._createIcon(scene, iconName, iconSize, this.C.cyan)
-      || scene.add.text(0, -8, iconName === 'rush' ? '⚡' : '🛡', { fontSize: iconSize + 'px' }).setOrigin(0.5);
-    iconImg.setPosition(0, -8);
-    const nameText = scene.add.text(0, 16, name, {
-      fontFamily: 'Arial,sans-serif',
-      fontSize: MobileLayout.fontSize(11, h),
-      color: SportsConfig.colors.textCyan,
-      fontStyle: 'bold',
-    }).setOrigin(0.5);
-    const badge = scene.add.circle(size / 2 - 8, -size / 2 + 8, 10, SportsVisuals.C.neonBlue, 1);
-    const badgeNum = scene.add.text(size / 2 - 8, -size / 2 + 8, String(count), {
-      fontSize: '11px',
-      color: '#000',
-      fontStyle: 'bold',
-    }).setOrigin(0.5);
-
-    container.add([bg, iconImg, nameText, badge, badgeNum]);
-    container.setSize(size, size);
-
-    bg.fillStyle(SportsVisuals.C.glass, 0.85);
-    bg.fillRoundedRect(-size / 2, -size / 2, size, size, 10);
-    SportsVisuals._strokeGlowRect(bg, -size / 2, -size / 2, size, size, 10, SportsVisuals.C.neonBlue, 0.7);
-
-    const hit = scene.add.rectangle(0, 0, size, size, 0xffffff, 0.001);
-    container.add(hit);
-    MobileInput.bindTap(hit, onClick);
-
-    return { container: container, hit: hit };
   },
 
   /** Score increment punch animation */

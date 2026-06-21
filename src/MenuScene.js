@@ -47,8 +47,6 @@ class MenuScene extends Phaser.Scene {
       height: MobileLayout.touchTarget(h),
     });
 
-    this.tapHint = UI.createTapPrompt(this, 'TAP ANYWHERE TO START');
-
     this.muteButton = UI.createMuteButton(this, 0, 0);
     this.buildHelpModal();
     this.layout();
@@ -133,8 +131,7 @@ class MenuScene extends Phaser.Scene {
     this.bestText.setPosition(centerX, safe.top + height * 0.28);
     this.playButton.setPosition(centerX, height * 0.48);
     this.helpButton.setPosition(centerX, height * 0.60);
-    this.tapHint.redraw(centerX, height - safe.bottom - MobileLayout.s(36, height));
-    this.muteButton.setPosition(width - safe.side - MobileLayout.s(24, height), safe.top + MobileLayout.s(24, height));
+    UI.layoutMuteButton(this.muteButton, safe, width, height, 'bottom-left');
 
     this.helpOverlay.getAt(0).setSize(width, height);
     this.helpPanel.setPosition(centerX, height * 0.5);

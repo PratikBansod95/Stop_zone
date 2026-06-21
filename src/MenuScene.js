@@ -51,6 +51,18 @@ class MenuScene extends Phaser.Scene {
     this.layout();
     this.bindInput();
 
+    // Full-screen tap fallback — works even if a button hit zone fails on some phones
+    this.menuTapZone = this.add.rectangle(0, 0, 1, 1, 0x000000, 0.001)
+      .setOrigin(0.5)
+      .setDepth(-1)
+      .setInteractive();
+    this.menuTapZone.on('pointerdown', function () {
+      if (!this.modalOpen) {
+        SoundManager.ensureContext();
+        this.scene.start('PlayScene');
+      }
+    }, this);
+
     YouTubeBridge.gameReady();
 
     this.scale.on('resize', this.layout, this);
@@ -59,6 +71,9 @@ class MenuScene extends Phaser.Scene {
 
   cleanup() {
     this.scale.off('resize', this.layout, this);
+    if (this.menuTapZone) {
+      this.menuTapZone.off('pointerdown');
+    }
     this.input.keyboard.off('keydown-ESC', this.onEscKey, this);
     this.input.keyboard.off('keydown-SPACE', this.onStartKey, this);
     this.input.keyboard.off('keydown-ENTER', this.onStartKey, this);
@@ -128,6 +143,11 @@ class MenuScene extends Phaser.Scene {
 
     this.helpOverlay.getAt(0).setSize(width, height);
     this.helpPanel.setPosition(centerX, height * 0.5);
+
+    if (this.menuTapZone) {
+      this.menuTapZone.setPosition(centerX, height / 2);
+      this.menuTapZone.setSize(width, height);
+    }
   }
 
   bindInput() {
@@ -151,11 +171,17 @@ class MenuScene extends Phaser.Scene {
 
   openHelpModal() {
     this.modalOpen = true;
+    if (this.menuTapZone) {
+      this.menuTapZone.disableInteractive();
+    }
     this.helpOverlay.open();
   }
 
   closeHelpModal() {
     this.modalOpen = false;
+    if (this.menuTapZone) {
+      this.menuTapZone.setInteractive();
+    }
     this.helpOverlay.close();
   }
 }

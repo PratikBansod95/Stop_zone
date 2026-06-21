@@ -18,18 +18,12 @@ const UI = {
     const fillColor = options.color || Theme.colors.buttonPrimary;
     const hoverColor = options.hoverColor || Theme.colors.buttonPrimaryHover;
     const textColor = options.textColor || Theme.colors.buttonPrimaryText;
-    const radius = btnHeight / 2;
 
     const container = scene.add.container(x, y);
-    const bg = scene.add.graphics();
-    const drawBg = function (color) {
-      bg.clear();
-      bg.fillStyle(color, 1);
-      bg.fillRoundedRect(-width / 2, -btnHeight / 2, width, btnHeight, radius);
-      bg.lineStyle(1.5, 0xffffff, 0.2);
-      bg.strokeRoundedRect(-width / 2, -btnHeight / 2, width, btnHeight, radius);
-    };
-    drawBg(fillColor);
+
+    // Rectangle hit targets work reliably on mobile (Graphics do not).
+    const bg = scene.add.rectangle(0, 0, width, btnHeight, fillColor, 1);
+    bg.setStrokeStyle(2, 0xffffff, 0.22);
 
     const text = scene.add.text(0, 0, label, UI.textStyle({
       fontSize: options.fontSize || MobileLayout.fontSize(30, height),
@@ -39,29 +33,39 @@ const UI = {
 
     container.add([bg, text]);
     container.setSize(width, btnHeight);
-    bg.setInteractive(new Phaser.Geom.Rectangle(-width / 2, -btnHeight / 2, width, btnHeight), Phaser.Geom.Rectangle.Contains);
 
-    const activate = function (event) {
+    // Hit zone on the container so taps on the label also register.
+    container.setInteractive(
+      new Phaser.Geom.Rectangle(-width / 2, -btnHeight / 2, width, btnHeight),
+      Phaser.Geom.Rectangle.Contains
+    );
+
+    const activate = function (pointer, localX, localY, event) {
       if (event) {
         event.stopPropagation();
       }
       SoundManager.ensureContext();
+      onClick();
       scene.tweens.add({
         targets: container,
-        scale: 0.96,
-        duration: 80,
+        scale: 0.95,
+        duration: 70,
         yoyo: true,
         ease: 'Quad.easeOut',
-        onComplete: onClick,
       });
     };
 
-    bg.on('pointerdown', activate);
-    bg.on('pointerover', function () {
-      drawBg(hoverColor);
+    container.on('pointerdown', activate);
+
+    container.setFillStyle = function (color) {
+      bg.setFillStyle(color);
+    };
+
+    container.on('pointerover', function () {
+      bg.setFillStyle(hoverColor);
     });
-    bg.on('pointerout', function () {
-      drawBg(fillColor);
+    container.on('pointerout', function () {
+      bg.setFillStyle(fillColor);
       container.setScale(1);
     });
 
@@ -73,7 +77,9 @@ const UI = {
     const w = Math.min(scene.scale.width * 0.88, MobileLayout.s(420, height));
     const h = MobileLayout.touchTarget(height);
     const container = scene.add.container(0, 0).setDepth(40);
-    const bg = scene.add.graphics();
+    const bg = scene.add.rectangle(0, 0, w, h, Theme.colors.glass || Theme.colors.panel, 0.55);
+    bg.setStrokeStyle(2, Theme.colors.accent, 0.45);
+
     const label = scene.add.text(0, 0, 'TAP TO STOP', UI.textStyle({
       fontSize: MobileLayout.fontSize(22, height),
       fontStyle: 'bold',
@@ -86,11 +92,6 @@ const UI = {
 
     container.redraw = function (x, y) {
       container.setPosition(x, y);
-      bg.clear();
-      bg.fillStyle(Theme.colors.glass || Theme.colors.panel, 0.55);
-      bg.fillRoundedRect(-w / 2, -h / 2, w, h, h / 2);
-      bg.lineStyle(2, Theme.colors.accent, 0.45);
-      bg.strokeRoundedRect(-w / 2, -h / 2, w, h, h / 2);
     };
 
     scene.tweens.add({
@@ -108,18 +109,21 @@ const UI = {
   createOverlay(scene, onClose) {
     const overlay = scene.add.container(0, 0).setDepth(100);
     const blocker = scene.add.rectangle(0, 0, 1, 1, 0x000000, 0.78).setOrigin(0);
-    blocker.setInteractive();
 
     overlay.add(blocker);
     overlay.setVisible(false);
+    blocker.disableInteractive();
+
     overlay.close = function () {
       overlay.setVisible(false);
+      blocker.disableInteractive();
       if (onClose) {
         onClose();
       }
     };
     overlay.open = function () {
       overlay.setVisible(true);
+      blocker.setInteractive();
     };
 
     return overlay;
@@ -137,13 +141,14 @@ const UI = {
     }).setOrigin(0.5);
 
     container.add([bg, icon]);
-    bg.setInteractive({ useHandCursor: true });
+    container.setSize(size, size);
+    container.setInteractive(new Phaser.Geom.Circle(0, 0, size / 2), Phaser.Geom.Circle.Contains);
 
     const refresh = function () {
       icon.setText(SoundManager.isMuted() ? '🔇' : '🔊');
     };
 
-    bg.on('pointerdown', function (event) {
+    container.on('pointerdown', function (pointer, localX, localY, event) {
       if (event) {
         event.stopPropagation();
       }

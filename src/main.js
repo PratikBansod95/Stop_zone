@@ -12,7 +12,10 @@ const config = {
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   input: {
-    activePointers: 2,
+    activePointers: 3,
+    touch: {
+      capture: true,
+    },
   },
   scene: [BootScene, MenuScene, PlayScene, GameOverScene],
 };

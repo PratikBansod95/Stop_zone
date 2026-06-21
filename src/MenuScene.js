@@ -18,6 +18,7 @@ class MenuScene extends Phaser.Scene {
     this.subtitle = this.add.text(0, 0, 'Tap when the dot hits the zone', UI.textStyle({
       fontSize: MobileLayout.fontSize(24, h),
       color: Theme.colors.textMuted,
+      align: 'center',
     })).setOrigin(0.5);
 
     this.bestText = this.add.text(0, 0, 'Best · ' + Storage.getBestScore(), UI.textStyle({
@@ -27,11 +28,10 @@ class MenuScene extends Phaser.Scene {
     })).setOrigin(0.5);
 
     this.playButton = UI.createButton(this, 0, 0, 'Play', function () {
-      SoundManager.ensureContext();
-      this.scene.start('PlayScene');
+      this.startGame();
     }.bind(this), {
-      width: Math.min(this.scale.width * 0.78, MobileLayout.s(340, h)),
-      height: MobileLayout.touchTarget(h) + 8,
+      width: Math.min(this.scale.width * 0.82, MobileLayout.s(340, h)),
+      height: MobileLayout.touchTarget(h) + 10,
       fontSize: MobileLayout.fontSize(32, h),
     });
 
@@ -42,26 +42,16 @@ class MenuScene extends Phaser.Scene {
       hoverColor: Theme.colors.buttonSecondaryHover,
       textColor: Theme.colors.buttonSecondaryText,
       fontSize: MobileLayout.fontSize(24, h),
-      width: Math.min(this.scale.width * 0.62, MobileLayout.s(280, h)),
+      width: Math.min(this.scale.width * 0.68, MobileLayout.s(280, h)),
       height: MobileLayout.touchTarget(h),
     });
+
+    this.tapHint = UI.createTapPrompt(this, 'TAP ANYWHERE TO START');
 
     this.muteButton = UI.createMuteButton(this, 0, 0);
     this.buildHelpModal();
     this.layout();
     this.bindInput();
-
-    // Full-screen tap fallback — works even if a button hit zone fails on some phones
-    this.menuTapZone = this.add.rectangle(0, 0, 1, 1, 0x000000, 0.001)
-      .setOrigin(0.5)
-      .setDepth(-1)
-      .setInteractive();
-    this.menuTapZone.on('pointerdown', function () {
-      if (!this.modalOpen) {
-        SoundManager.ensureContext();
-        this.scene.start('PlayScene');
-      }
-    }, this);
 
     YouTubeBridge.gameReady();
 
@@ -69,32 +59,35 @@ class MenuScene extends Phaser.Scene {
     this.events.once('shutdown', this.cleanup, this);
   }
 
+  startGame() {
+    SoundManager.ensureContext();
+    this.scene.start('PlayScene');
+  }
+
   cleanup() {
     this.scale.off('resize', this.layout, this);
-    if (this.menuTapZone) {
-      this.menuTapZone.off('pointerdown');
+    MobileInput.unbindSceneTap(this);
+    if (!MobileLayout.isMobile()) {
+      this.input.keyboard.off('keydown-ESC', this.onEscKey, this);
+      this.input.keyboard.off('keydown-SPACE', this.onStartKey, this);
+      this.input.keyboard.off('keydown-ENTER', this.onStartKey, this);
     }
-    this.input.keyboard.off('keydown-ESC', this.onEscKey, this);
-    this.input.keyboard.off('keydown-SPACE', this.onStartKey, this);
-    this.input.keyboard.off('keydown-ENTER', this.onStartKey, this);
   }
 
   buildHelpModal() {
     const h = this.scale.height;
-    const panelW = Math.min(this.scale.width * 0.88, MobileLayout.s(560, h));
+    const panelW = Math.min(this.scale.width * 0.92, MobileLayout.s(560, h));
+    const panelH = MobileLayout.s(440, h);
 
     this.helpOverlay = UI.createOverlay(this, function () {
       this.modalOpen = false;
     }.bind(this));
 
     const panel = this.add.container(0, 0);
-    const panelBg = this.add.graphics();
-    panelBg.fillStyle(Theme.colors.glass || Theme.colors.panel, 0.95);
-    panelBg.fillRoundedRect(-panelW / 2, -MobileLayout.s(220, h), panelW, MobileLayout.s(440, h), 24);
-    panelBg.lineStyle(2, Theme.colors.panelStroke, 0.6);
-    panelBg.strokeRoundedRect(-panelW / 2, -MobileLayout.s(220, h), panelW, MobileLayout.s(440, h), 24);
+    const panelBg = this.add.rectangle(0, 0, panelW, panelH, Theme.colors.glass || Theme.colors.panel, 0.96);
+    panelBg.setStrokeStyle(2, Theme.colors.panelStroke, 0.6);
 
-    const title = this.add.text(0, -MobileLayout.s(170, h), 'How to Play', UI.textStyle({
+    const title = this.add.text(0, -MobileLayout.s(150, h), 'How to Play', UI.textStyle({
       fontSize: MobileLayout.fontSize(34, h),
       fontStyle: 'bold',
     })).setOrigin(0.5);
@@ -114,10 +107,10 @@ class MenuScene extends Phaser.Scene {
       })
     ).setOrigin(0.5);
 
-    const closeButton = UI.createButton(this, 0, MobileLayout.s(170, h), 'Got it', function () {
+    const closeButton = UI.createButton(this, 0, MobileLayout.s(160, h), 'Got it', function () {
       this.closeHelpModal();
     }.bind(this), {
-      width: MobileLayout.s(220, h),
+      width: MobileLayout.s(240, h),
       height: MobileLayout.touchTarget(h),
       fontSize: MobileLayout.fontSize(24, h),
     });
@@ -134,26 +127,36 @@ class MenuScene extends Phaser.Scene {
     const safe = MobileLayout.safeInsets(width, height);
 
     this.background.resize(width, height);
-    this.title.setPosition(centerX, height * 0.2);
-    this.subtitle.setPosition(centerX, height * 0.28);
-    this.bestText.setPosition(centerX, height * 0.35);
-    this.playButton.setPosition(centerX, height * 0.5);
-    this.helpButton.setPosition(centerX, height * 0.62);
-    this.muteButton.setPosition(width - safe.side - MobileLayout.s(28, height), safe.top + MobileLayout.s(28, height));
+    this.title.setPosition(centerX, safe.top + height * 0.14);
+    this.subtitle.setPosition(centerX, safe.top + height * 0.22);
+    this.bestText.setPosition(centerX, safe.top + height * 0.28);
+    this.playButton.setPosition(centerX, height * 0.48);
+    this.helpButton.setPosition(centerX, height * 0.60);
+    this.tapHint.redraw(centerX, height - safe.bottom - MobileLayout.s(36, height));
+    this.muteButton.setPosition(width - safe.side - MobileLayout.s(24, height), safe.top + MobileLayout.s(24, height));
 
     this.helpOverlay.getAt(0).setSize(width, height);
     this.helpPanel.setPosition(centerX, height * 0.5);
-
-    if (this.menuTapZone) {
-      this.menuTapZone.setPosition(centerX, height / 2);
-      this.menuTapZone.setSize(width, height);
-    }
   }
 
   bindInput() {
-    this.input.keyboard.on('keydown-ESC', this.onEscKey, this);
-    this.input.keyboard.on('keydown-SPACE', this.onStartKey, this);
-    this.input.keyboard.on('keydown-ENTER', this.onStartKey, this);
+    const self = this;
+    const ignore = [this.playButton, this.helpButton, this.muteButton];
+
+    MobileInput.bindSceneTap(this, function () {
+      self.startGame();
+    }, {
+      when: function () {
+        return !self.modalOpen;
+      },
+      ignore: ignore,
+    });
+
+    if (!MobileLayout.isMobile()) {
+      this.input.keyboard.on('keydown-ESC', this.onEscKey, this);
+      this.input.keyboard.on('keydown-SPACE', this.onStartKey, this);
+      this.input.keyboard.on('keydown-ENTER', this.onStartKey, this);
+    }
   }
 
   onEscKey() {
@@ -164,24 +167,17 @@ class MenuScene extends Phaser.Scene {
 
   onStartKey() {
     if (!this.modalOpen) {
-      SoundManager.ensureContext();
-      this.scene.start('PlayScene');
+      this.startGame();
     }
   }
 
   openHelpModal() {
     this.modalOpen = true;
-    if (this.menuTapZone) {
-      this.menuTapZone.disableInteractive();
-    }
     this.helpOverlay.open();
   }
 
   closeHelpModal() {
     this.modalOpen = false;
-    if (this.menuTapZone) {
-      this.menuTapZone.setInteractive();
-    }
     this.helpOverlay.close();
   }
 }

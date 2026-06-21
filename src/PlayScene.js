@@ -183,6 +183,7 @@ class PlayScene extends Phaser.Scene {
     }
     this.input.keyboard.off('keydown-SPACE', this.onStopInput, this);
     this.input.keyboard.off('keydown-ENTER', this.onStopInput, this);
+    MobileInput.unbindSceneTap(this);
   }
 
   onResize() {
@@ -195,12 +196,22 @@ class PlayScene extends Phaser.Scene {
   }
 
   bindInput() {
-    this.tapZone.on('pointerdown', function () {
-      this.onStopInput();
-    }, this);
+    const self = this;
+    const ignore = [this.muteButton];
 
-    this.input.keyboard.on('keydown-SPACE', this.onStopInput, this);
-    this.input.keyboard.on('keydown-ENTER', this.onStopInput, this);
+    MobileInput.bindSceneTap(this, function () {
+      self.onStopInput();
+    }, {
+      when: function () {
+        return !self.gameEnded && !self.isStopped;
+      },
+      ignore: ignore,
+    });
+
+    if (!MobileLayout.isMobile()) {
+      this.input.keyboard.on('keydown-SPACE', this.onStopInput, this);
+      this.input.keyboard.on('keydown-ENTER', this.onStopInput, this);
+    }
   }
 
   // ===========================================================================
@@ -266,9 +277,6 @@ class PlayScene extends Phaser.Scene {
       this.comboText,
     ]);
 
-    this.tapZone = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.001).setDepth(5);
-    this.tapZone.setInteractive();
-
     this.muteButton = UI.createMuteButton(this, 0, 0);
 
     this.shimmerTween = this.tweens.add({
@@ -320,11 +328,8 @@ class PlayScene extends Phaser.Scene {
     this.comboText.setPosition(centerX, this.trackTop - MobileLayout.s(36, height));
     this.feedbackText.setPosition(centerX, this.trackTop - MobileLayout.s(70, height));
 
-    this.tapPrompt.redraw(centerX, height - safe.bottom - MobileLayout.s(48, height));
-    this.muteButton.setPosition(width - safe.side - MobileLayout.s(28, height), safe.top + MobileLayout.s(28, height));
-
-    this.tapZone.setPosition(width / 2, height / 2);
-    this.tapZone.setSize(width, height);
+    this.tapPrompt.redraw(centerX, height - safe.bottom - MobileLayout.s(36, height));
+    this.muteButton.setPosition(width - safe.side - MobileLayout.s(24, height), safe.top + MobileLayout.s(24, height));
 
     this.refreshTrackVisuals();
     this.syncIndicatorPosition();

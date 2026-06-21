@@ -1,5 +1,5 @@
-const GAME_WIDTH = 720;
-const GAME_HEIGHT = 1280;
+const GAME_WIDTH = 390;
+const GAME_HEIGHT = 844;
 
 const config = {
   type: Phaser.AUTO,
@@ -25,7 +25,19 @@ window.__phaserGame = game;
 
 document.body.style.background = Theme.colors.bgCss;
 
+if (MobileLayout.isMobile()) {
+  document.body.classList.add('is-mobile');
+}
+
 YouTubeBridge.initPlatform(game);
+
+game.canvas.oncontextmenu = function (event) {
+  event.preventDefault();
+};
+
+window.addEventListener('resize', function () {
+  game.scale.refresh();
+});
 
 function unlockAudio() {
   SoundManager.ensureContext();

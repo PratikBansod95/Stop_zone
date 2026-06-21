@@ -21,7 +21,6 @@ const UI = {
 
     const container = scene.add.container(x, y);
 
-    // Rectangle hit targets work reliably on mobile (Graphics do not).
     const bg = scene.add.rectangle(0, 0, width, btnHeight, fillColor, 1);
     bg.setStrokeStyle(2, 0xffffff, 0.22);
 
@@ -34,17 +33,8 @@ const UI = {
     container.add([bg, text]);
     container.setSize(width, btnHeight);
 
-    // Hit zone on the container so taps on the label also register.
-    container.setInteractive(
-      new Phaser.Geom.Rectangle(-width / 2, -btnHeight / 2, width, btnHeight),
-      Phaser.Geom.Rectangle.Contains
-    );
-
-    const activate = function (pointer, localX, localY, event) {
-      if (event) {
-        event.stopPropagation();
-      }
-      SoundManager.ensureContext();
+    // Interactive on the rectangle — reliable on mobile (container hit zones are not).
+    MobileInput.bindTap(bg, function () {
       onClick();
       scene.tweens.add({
         targets: container,
@@ -53,26 +43,24 @@ const UI = {
         yoyo: true,
         ease: 'Quad.easeOut',
       });
-    };
-
-    container.on('pointerdown', activate);
-
-    container.setFillStyle = function (color) {
-      bg.setFillStyle(color);
-    };
-
-    container.on('pointerover', function () {
-      bg.setFillStyle(hoverColor);
-    });
-    container.on('pointerout', function () {
-      bg.setFillStyle(fillColor);
-      container.setScale(1);
     });
 
+    if (!MobileLayout.isMobile()) {
+      bg.on('pointerover', function () {
+        bg.setFillStyle(hoverColor);
+      });
+      bg.on('pointerout', function () {
+        bg.setFillStyle(fillColor);
+        container.setScale(1);
+      });
+    }
+
+    container.hitTarget = bg;
     return container;
   },
 
-  createTapPrompt(scene) {
+  createTapPrompt(scene, label) {
+    label = label || 'TAP TO STOP';
     const height = scene.scale.height;
     const w = Math.min(scene.scale.width * 0.88, MobileLayout.s(420, height));
     const h = MobileLayout.touchTarget(height);
@@ -80,14 +68,14 @@ const UI = {
     const bg = scene.add.rectangle(0, 0, w, h, Theme.colors.glass || Theme.colors.panel, 0.55);
     bg.setStrokeStyle(2, Theme.colors.accent, 0.45);
 
-    const label = scene.add.text(0, 0, 'TAP TO STOP', UI.textStyle({
+    const text = scene.add.text(0, 0, label, UI.textStyle({
       fontSize: MobileLayout.fontSize(22, height),
       fontStyle: 'bold',
       color: Theme.colors.text,
       letterSpacing: 2,
     })).setOrigin(0.5);
 
-    container.add([bg, label]);
+    container.add([bg, text]);
     container.setSize(w, h);
 
     container.redraw = function (x, y) {
@@ -107,7 +95,7 @@ const UI = {
   },
 
   createOverlay(scene, onClose) {
-    const overlay = scene.add.container(0, 0).setDepth(100);
+    const overlay = scene.add.container(0, 0).setDepth(200);
     const blocker = scene.add.rectangle(0, 0, 1, 1, 0x000000, 0.78).setOrigin(0);
 
     overlay.add(blocker);
@@ -142,22 +130,18 @@ const UI = {
 
     container.add([bg, icon]);
     container.setSize(size, size);
-    container.setInteractive(new Phaser.Geom.Circle(0, 0, size / 2), Phaser.Geom.Circle.Contains);
 
     const refresh = function () {
       icon.setText(SoundManager.isMuted() ? '🔇' : '🔊');
     };
 
-    container.on('pointerdown', function (pointer, localX, localY, event) {
-      if (event) {
-        event.stopPropagation();
-      }
-      SoundManager.ensureContext();
+    MobileInput.bindTap(bg, function () {
       SoundManager.toggleMute();
       refresh();
       scene.tweens.add({ targets: container, scale: 0.9, duration: 60, yoyo: true });
     });
 
+    container.hitTarget = bg;
     container.refresh = refresh;
     return container;
   },

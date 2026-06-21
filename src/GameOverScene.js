@@ -81,11 +81,10 @@ class GameOverScene extends Phaser.Scene {
     })).setOrigin(0.5);
 
     this.playAgainButton = UI.createButton(this, 0, 0, 'Play Again', function () {
-      SoundManager.ensureContext();
-      this.scene.start('PlayScene');
+      this.restartGame();
     }.bind(this), {
-      width: Math.min(this.scale.width * 0.78, MobileLayout.s(340, h)),
-      height: MobileLayout.touchTarget(h) + 8,
+      width: Math.min(this.scale.width * 0.82, MobileLayout.s(340, h)),
+      height: MobileLayout.touchTarget(h) + 10,
       fontSize: MobileLayout.fontSize(30, h),
     });
 
@@ -96,9 +95,11 @@ class GameOverScene extends Phaser.Scene {
       hoverColor: Theme.colors.buttonSecondaryHover,
       textColor: Theme.colors.buttonSecondaryText,
       fontSize: MobileLayout.fontSize(24, h),
-      width: Math.min(this.scale.width * 0.55, MobileLayout.s(240, h)),
+      width: Math.min(this.scale.width * 0.58, MobileLayout.s(240, h)),
       height: MobileLayout.touchTarget(h),
     });
+
+    this.tapHint = UI.createTapPrompt(this, 'TAP TO PLAY AGAIN');
 
     this.muteButton = UI.createMuteButton(this, 0, 0);
 
@@ -109,6 +110,11 @@ class GameOverScene extends Phaser.Scene {
 
     this.scale.on('resize', this.layout, this);
     this.events.once('shutdown', this.cleanup, this);
+  }
+
+  restartGame() {
+    SoundManager.ensureContext();
+    this.scene.start('PlayScene');
   }
 
   finalizeBestScore() {
@@ -129,9 +135,12 @@ class GameOverScene extends Phaser.Scene {
 
   cleanup() {
     this.scale.off('resize', this.layout, this);
-    this.input.keyboard.off('keydown-SPACE', this.onPlayAgainKey, this);
-    this.input.keyboard.off('keydown-ENTER', this.onPlayAgainKey, this);
-    this.input.keyboard.off('keydown-ESC', this.onMenuKey, this);
+    MobileInput.unbindSceneTap(this);
+    if (!MobileLayout.isMobile()) {
+      this.input.keyboard.off('keydown-SPACE', this.onPlayAgainKey, this);
+      this.input.keyboard.off('keydown-ENTER', this.onPlayAgainKey, this);
+      this.input.keyboard.off('keydown-ESC', this.onMenuKey, this);
+    }
   }
 
   playEntrance() {
@@ -178,37 +187,48 @@ class GameOverScene extends Phaser.Scene {
     const height = this.scale.height;
     const centerX = width / 2;
     const safe = MobileLayout.safeInsets(width, height);
-    const panelW = width * 0.88;
+    const panelW = width * 0.92;
     const panelH = MobileLayout.s(280, height);
-    const panelY = height * 0.38;
+    const panelY = height * 0.36;
 
     this.background.resize(width, height);
     this.statsPanel.draw(centerX, panelY, panelW, panelH);
 
-    this.title.setPosition(centerX, safe.top + MobileLayout.s(56, height));
-    this.scoreLabel.setPosition(centerX - MobileLayout.s(90, height), panelY - MobileLayout.s(70, height));
-    this.scoreValue.setPosition(centerX - MobileLayout.s(90, height), panelY - MobileLayout.s(20, height));
-    this.bestLabel.setPosition(centerX + MobileLayout.s(90, height), panelY - MobileLayout.s(70, height));
-    this.bestValue.setPosition(centerX + MobileLayout.s(90, height), panelY - MobileLayout.s(20, height));
+    this.title.setPosition(centerX, safe.top + MobileLayout.s(48, height));
+    this.scoreLabel.setPosition(centerX - MobileLayout.s(80, height), panelY - MobileLayout.s(70, height));
+    this.scoreValue.setPosition(centerX - MobileLayout.s(80, height), panelY - MobileLayout.s(20, height));
+    this.bestLabel.setPosition(centerX + MobileLayout.s(80, height), panelY - MobileLayout.s(70, height));
+    this.bestValue.setPosition(centerX + MobileLayout.s(80, height), panelY - MobileLayout.s(20, height));
     this.newBestBadge.setPosition(centerX, panelY + MobileLayout.s(20, height));
-    this.accuracyLabel.setPosition(centerX - MobileLayout.s(60, height), panelY + MobileLayout.s(70, height));
-    this.accuracyValue.setPosition(centerX + MobileLayout.s(40, height), panelY + MobileLayout.s(70, height));
+    this.accuracyLabel.setPosition(centerX - MobileLayout.s(55, height), panelY + MobileLayout.s(70, height));
+    this.accuracyValue.setPosition(centerX + MobileLayout.s(35, height), panelY + MobileLayout.s(70, height));
     this.statsLine.setPosition(centerX, panelY + MobileLayout.s(110, height));
-    this.message.setPosition(centerX, height * 0.58);
-    this.playAgainButton.setPosition(centerX, height * 0.72);
-    this.menuButton.setPosition(centerX, height * 0.82);
-    this.muteButton.setPosition(width - safe.side - MobileLayout.s(28, height), safe.top + MobileLayout.s(28, height));
+    this.message.setPosition(centerX, height * 0.56);
+    this.playAgainButton.setPosition(centerX, height * 0.68);
+    this.menuButton.setPosition(centerX, height * 0.78);
+    this.tapHint.redraw(centerX, height - safe.bottom - MobileLayout.s(36, height));
+    this.muteButton.setPosition(width - safe.side - MobileLayout.s(24, height), safe.top + MobileLayout.s(24, height));
   }
 
   bindInput() {
-    this.input.keyboard.on('keydown-SPACE', this.onPlayAgainKey, this);
-    this.input.keyboard.on('keydown-ENTER', this.onPlayAgainKey, this);
-    this.input.keyboard.on('keydown-ESC', this.onMenuKey, this);
+    const self = this;
+    const ignore = [this.playAgainButton, this.menuButton, this.muteButton];
+
+    MobileInput.bindSceneTap(this, function () {
+      self.restartGame();
+    }, {
+      ignore: ignore,
+    });
+
+    if (!MobileLayout.isMobile()) {
+      this.input.keyboard.on('keydown-SPACE', this.onPlayAgainKey, this);
+      this.input.keyboard.on('keydown-ENTER', this.onPlayAgainKey, this);
+      this.input.keyboard.on('keydown-ESC', this.onMenuKey, this);
+    }
   }
 
   onPlayAgainKey() {
-    SoundManager.ensureContext();
-    this.scene.start('PlayScene');
+    this.restartGame();
   }
 
   onMenuKey() {

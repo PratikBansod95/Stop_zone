@@ -12,65 +12,70 @@ class GameOverScene extends Phaser.Scene {
   }
 
   create() {
+    const h = this.scale.height;
     this.background = FX.createRadialBackground(this, -100);
+    this.statsPanel = FX.createGlassPanel(this, 1, 1, 5);
 
     this.title = this.add.text(0, 0, 'Game Over', UI.textStyle({
-      fontSize: '56px',
+      fontSize: MobileLayout.fontSize(52, h),
       fontStyle: 'bold',
       color: '#ff6b6b',
     })).setOrigin(0.5);
-    this.title.setShadow(0, 0, Theme.colors.danger, 12, true, true);
+    this.title.setShadow(0, 4, Theme.colors.danger, 14, true, true);
 
-    this.scoreLabel = this.add.text(0, 0, 'Final Score', UI.textStyle({
-      fontSize: '22px',
+    this.scoreLabel = this.add.text(0, 0, 'SCORE', UI.textStyle({
+      fontSize: MobileLayout.fontSize(16, h),
       color: Theme.colors.textMuted,
+      letterSpacing: 3,
     })).setOrigin(0.5);
 
     this.scoreValue = this.add.text(0, 0, String(this.finalScore), UI.textStyle({
-      fontSize: '72px',
+      fontSize: MobileLayout.fontSize(76, h),
       fontStyle: 'bold',
       color: Theme.colors.zoneTop,
     })).setOrigin(0.5);
     FX.applyScoreGlow(this.scoreValue);
 
-    this.bestLabel = this.add.text(0, 0, 'Best Score', UI.textStyle({
-      fontSize: '18px',
+    this.bestLabel = this.add.text(0, 0, 'BEST', UI.textStyle({
+      fontSize: MobileLayout.fontSize(16, h),
       color: Theme.colors.textMuted,
+      letterSpacing: 3,
     })).setOrigin(0.5);
 
     this.bestValue = this.add.text(0, 0, String(this.bestScore), UI.textStyle({
-      fontSize: '36px',
+      fontSize: MobileLayout.fontSize(40, h),
       fontStyle: 'bold',
       color: Theme.colors.highlight,
     })).setOrigin(0.5);
 
-    this.newBestBadge = this.add.text(0, 0, 'NEW BEST!', UI.textStyle({
-      fontSize: '18px',
+    this.newBestBadge = this.add.text(0, 0, '★ NEW BEST', UI.textStyle({
+      fontSize: MobileLayout.fontSize(18, h),
       fontStyle: 'bold',
       color: Theme.colors.secondary,
     })).setOrigin(0.5).setVisible(false);
 
-    this.accuracyLabel = this.add.text(0, 0, 'Accuracy', UI.textStyle({
-      fontSize: '18px',
+    this.accuracyLabel = this.add.text(0, 0, 'ACCURACY', UI.textStyle({
+      fontSize: MobileLayout.fontSize(16, h),
       color: Theme.colors.textMuted,
+      letterSpacing: 2,
     })).setOrigin(0.5);
 
     this.accuracyValue = this.add.text(0, 0, this.accuracy + '%', UI.textStyle({
-      fontSize: '32px',
+      fontSize: MobileLayout.fontSize(36, h),
       fontStyle: 'bold',
       color: Theme.colors.accent,
     })).setOrigin(0.5);
 
     this.statsLine = this.add.text(0, 0,
-      this.finalScore + ' hits  ·  ' + this.attempts + ' attempts',
+      this.finalScore + ' hits · ' + this.attempts + ' tries',
       UI.textStyle({
-        fontSize: '18px',
+        fontSize: MobileLayout.fontSize(18, h),
         color: Theme.colors.textMuted,
       })
     ).setOrigin(0.5);
 
-    this.message = this.add.text(0, 0, 'Saving score...', UI.textStyle({
-      fontSize: '20px',
+    this.message = this.add.text(0, 0, 'Saving...', UI.textStyle({
+      fontSize: MobileLayout.fontSize(20, h),
       color: Theme.colors.textMuted,
       align: 'center',
     })).setOrigin(0.5);
@@ -78,23 +83,22 @@ class GameOverScene extends Phaser.Scene {
     this.playAgainButton = UI.createButton(this, 0, 0, 'Play Again', function () {
       SoundManager.ensureContext();
       this.scene.start('PlayScene');
-    }.bind(this));
+    }.bind(this), {
+      width: Math.min(this.scale.width * 0.78, MobileLayout.s(340, h)),
+      height: MobileLayout.touchTarget(h) + 8,
+      fontSize: MobileLayout.fontSize(30, h),
+    });
 
-    this.menuButton = UI.createButton(this, 0, 0, 'Main Menu', function () {
+    this.menuButton = UI.createButton(this, 0, 0, 'Menu', function () {
       this.scene.start('MenuScene');
     }.bind(this), {
       color: Theme.colors.buttonSecondary,
       hoverColor: Theme.colors.buttonSecondaryHover,
       textColor: Theme.colors.buttonSecondaryText,
-      fontSize: '24px',
-      width: 240,
-      height: 52,
+      fontSize: MobileLayout.fontSize(24, h),
+      width: Math.min(this.scale.width * 0.55, MobileLayout.s(240, h)),
+      height: MobileLayout.touchTarget(h),
     });
-
-    this.hintText = this.add.text(0, 0, 'Space = Play Again   Esc = Main Menu', UI.textStyle({
-      fontSize: '18px',
-      color: Theme.colors.textMuted,
-    })).setOrigin(0.5);
 
     this.muteButton = UI.createMuteButton(this, 0, 0);
 
@@ -155,40 +159,45 @@ class GameOverScene extends Phaser.Scene {
 
   getMessage() {
     if (this.isNewBest) {
-      return 'You set a new personal best!';
+      return 'New personal best!';
     }
     if (this.finalScore === 0) {
-      return 'Keep practicing — you\'ll nail it!';
+      return 'Keep practicing — you\'ve got this.';
     }
     if (this.finalScore < 5) {
-      return 'Good start! Try to beat your score.';
+      return 'Good start! Beat your best next time.';
     }
     if (this.finalScore < 10) {
-      return 'Solid reflexes! Can you go further?';
+      return 'Solid reflexes! Go further.';
     }
-    return 'Amazing run! You\'re a Stop Zone pro.';
+    return 'Amazing run!';
   }
 
   layout() {
     const width = this.scale.width;
     const height = this.scale.height;
     const centerX = width / 2;
+    const safe = MobileLayout.safeInsets(width, height);
+    const panelW = width * 0.88;
+    const panelH = MobileLayout.s(280, height);
+    const panelY = height * 0.38;
 
     this.background.resize(width, height);
-    this.title.setPosition(centerX, height * 0.14);
-    this.scoreLabel.setPosition(centerX, height * 0.24);
-    this.scoreValue.setPosition(centerX, height * 0.30);
-    this.bestLabel.setPosition(centerX, height * 0.38);
-    this.bestValue.setPosition(centerX, height * 0.42);
-    this.newBestBadge.setPosition(centerX, height * 0.47);
-    this.accuracyLabel.setPosition(centerX, height * 0.52);
-    this.accuracyValue.setPosition(centerX, height * 0.56);
-    this.statsLine.setPosition(centerX, height * 0.62);
-    this.message.setPosition(centerX, height * 0.68);
-    this.playAgainButton.setPosition(centerX, height * 0.76);
-    this.menuButton.setPosition(centerX, height * 0.84);
-    this.hintText.setPosition(centerX, height * 0.92);
-    this.muteButton.setPosition(width - 36, 36);
+    this.statsPanel.draw(centerX, panelY, panelW, panelH);
+
+    this.title.setPosition(centerX, safe.top + MobileLayout.s(56, height));
+    this.scoreLabel.setPosition(centerX - MobileLayout.s(90, height), panelY - MobileLayout.s(70, height));
+    this.scoreValue.setPosition(centerX - MobileLayout.s(90, height), panelY - MobileLayout.s(20, height));
+    this.bestLabel.setPosition(centerX + MobileLayout.s(90, height), panelY - MobileLayout.s(70, height));
+    this.bestValue.setPosition(centerX + MobileLayout.s(90, height), panelY - MobileLayout.s(20, height));
+    this.newBestBadge.setPosition(centerX, panelY + MobileLayout.s(20, height));
+    this.accuracyLabel.setPosition(centerX - MobileLayout.s(60, height), panelY + MobileLayout.s(70, height));
+    this.accuracyValue.setPosition(centerX + MobileLayout.s(40, height), panelY + MobileLayout.s(70, height));
+    this.statsLine.setPosition(centerX, panelY + MobileLayout.s(110, height));
+    this.message.setPosition(centerX, height * 0.58);
+    this.playAgainButton.setPosition(centerX, height * 0.72);
+    this.menuButton.setPosition(centerX, height * 0.82);
+    this.muteButton.setPosition(width - safe.side - MobileLayout.s(28, height), safe.top + MobileLayout.s(28, height));
   }
 
   bindInput() {

@@ -16,9 +16,7 @@ class PlayScene extends Phaser.Scene {
     this.isStopped = false;
     this.gameEnded = false;
     this.zoneCenter = 0.5;
-    this.trackWidth = 48;
     this.zoneHeightRatio = 0.18;
-    this.indicatorSize = 28;
     this.shimmerPhase = 0;
   }
 
@@ -124,11 +122,10 @@ class PlayScene extends Phaser.Scene {
 
   onHit() {
     this.score += 1;
-    this.scoreText.setText('Score: ' + this.score);
-    this.showFeedback('Nice!', Theme.colors.zoneTop);
+    this.scoreText.setText(String(this.score));
+    this.showFeedback('Perfect!', Theme.colors.zoneTop);
     this.playHitEffects();
 
-    // Report score to YouTube (best score stays in sync with save data)
     YouTubeBridge.onRoundScoreChanged(this.score);
 
     this.time.delayedCall(450, function () {
@@ -207,61 +204,63 @@ class PlayScene extends Phaser.Scene {
   }
 
   // ===========================================================================
-  // VISUAL POLISH — theme, motion, UX (safe to tweak independently)
+  // MOBILE UI — layered track, glass HUD, tap prompt
   // ===========================================================================
 
   buildVisuals() {
+    const h = this.scale.height;
+
     this.background = FX.createRadialBackground(this, -100);
 
     this.playGroup = this.add.container(0, 0).setDepth(10);
 
-    this.scoreText = this.add.text(0, 0, 'Score: 0', UI.textStyle({
-      fontSize: '42px',
+    this.hudPanel = FX.createGlassPanel(this, 1, 1, 15);
+    this.scoreLabel = this.add.text(0, 0, 'SCORE', UI.textStyle({
+      fontSize: MobileLayout.fontSize(16, h),
+      color: Theme.colors.textMuted,
+      letterSpacing: 3,
+    })).setOrigin(0.5);
+    this.scoreText = this.add.text(0, 0, '0', UI.textStyle({
+      fontSize: MobileLayout.fontSize(52, h),
       fontStyle: 'bold',
       color: Theme.colors.zoneTop,
     })).setOrigin(0.5);
     FX.applyScoreGlow(this.scoreText);
 
+    this.bestHudText = this.add.text(0, 0, 'BEST ' + Storage.getBestScore(), UI.textStyle({
+      fontSize: MobileLayout.fontSize(18, h),
+      color: Theme.colors.highlight,
+      fontStyle: 'bold',
+    })).setOrigin(0.5);
+
     this.roundText = this.add.text(0, 0, 'Round 1', UI.textStyle({
-      fontSize: '22px',
+      fontSize: MobileLayout.fontSize(20, h),
       color: Theme.colors.textMuted,
     })).setOrigin(0.5);
 
-    this.difficultyLabel = this.add.text(0, 0, 'Speed', UI.textStyle({
-      fontSize: '16px',
-      color: Theme.colors.textMuted,
-    })).setOrigin(0, 0.5);
-
-    this.difficultyBarBg = this.add.rectangle(0, 0, 180, 8, Theme.colors.panel, 0.9)
-      .setOrigin(0, 0.5);
-    this.difficultyBarFill = this.add.rectangle(0, 0, 0, 8, Theme.colors.accent, 1)
-      .setOrigin(0, 0.5);
+    this.difficultyBarBg = this.add.graphics();
+    this.difficultyBarFill = this.add.graphics();
 
     this.comboText = this.add.text(0, 0, '', UI.textStyle({
-      fontSize: '28px',
+      fontSize: MobileLayout.fontSize(26, h),
       fontStyle: 'bold',
       color: Theme.colors.highlight,
     })).setOrigin(0.5).setAlpha(0).setScale(0.8);
 
-    this.hintText = this.add.text(0, 0, 'Tap / click / Space to stop', UI.textStyle({
-      fontSize: '20px',
-      color: Theme.colors.textMuted,
-    })).setOrigin(0.5);
-
-    this.trackVisuals = FX.createTrackVisuals(this, this.trackWidth);
-    this.indicatorVisual = FX.createIndicatorVisual(
-      this,
-      this.trackWidth + 16,
-      this.indicatorSize
-    );
+    this.trackVisuals = FX.createTrackVisuals(this);
+    this.indicatorVisual = FX.createIndicatorVisual(this, MobileLayout.s(52, h));
 
     this.feedbackText = this.add.text(0, 0, '', UI.textStyle({
-      fontSize: '38px',
+      fontSize: MobileLayout.fontSize(40, h),
       fontStyle: 'bold',
-    })).setOrigin(0.5).setAlpha(0);
+    })).setOrigin(0.5).setAlpha(0).setDepth(50);
 
+    this.tapPrompt = UI.createTapPrompt(this);
+
+    // Layer: groove → solid target zone → knob on top (clean mobile read)
     this.playGroup.add([
-      this.trackVisuals.container,
+      this.trackVisuals.backContainer,
+      this.trackVisuals.zoneContainer,
       this.indicatorVisual.container,
       this.feedbackText,
       this.comboText,
@@ -289,25 +288,40 @@ class PlayScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     const centerX = width / 2;
-    const trackHeight = Math.min(height * 0.42, 520);
+    const safe = MobileLayout.safeInsets(width, height);
+    const trackWidth = MobileLayout.s(72, height);
+    const trackHeight = Math.min(height * 0.48, MobileLayout.s(560, height));
 
+    this.trackWidth = trackWidth;
     this.trackHeight = trackHeight;
-    this.trackTop = height * 0.32;
+    this.trackTop = safe.top + height * 0.22;
     this.trackBottom = this.trackTop + trackHeight;
     this.trackCenterX = centerX;
     this.zoneHeight = trackHeight * this.zoneHeightRatio;
+    this.difficultyBarWidth = width * 0.42;
 
     this.background.resize(width, height);
 
-    this.scoreText.setPosition(centerX, height * 0.1);
-    this.roundText.setPosition(centerX, height * 0.145);
-    this.difficultyLabel.setPosition(centerX - 90, height * 0.175);
-    this.difficultyBarBg.setPosition(centerX - 90, height * 0.175);
-    this.difficultyBarFill.setPosition(centerX - 90, height * 0.175);
-    this.comboText.setPosition(centerX, height * 0.24);
-    this.hintText.setPosition(centerX, height * 0.9);
-    this.feedbackText.setPosition(centerX, height * 0.28);
-    this.muteButton.setPosition(width - 36, 36);
+    const hudW = width * 0.88;
+    const hudH = MobileLayout.s(118, height);
+    const hudY = safe.top + hudH / 2 + MobileLayout.s(8, height);
+    this.hudPanel.draw(centerX, hudY, hudW, hudH);
+
+    this.scoreLabel.setPosition(centerX - MobileLayout.s(80, height), hudY - MobileLayout.s(22, height));
+    this.scoreText.setPosition(centerX - MobileLayout.s(80, height), hudY + MobileLayout.s(12, height));
+    this.bestHudText.setPosition(centerX + MobileLayout.s(100, height), hudY);
+    this.roundText.setPosition(centerX, hudY + MobileLayout.s(46, height));
+
+    const barY = hudY + MobileLayout.s(58, height);
+    const barX = centerX - this.difficultyBarWidth / 2;
+    this.difficultyBarY = barY;
+    this.difficultyBarX = barX;
+
+    this.comboText.setPosition(centerX, this.trackTop - MobileLayout.s(36, height));
+    this.feedbackText.setPosition(centerX, this.trackTop - MobileLayout.s(70, height));
+
+    this.tapPrompt.redraw(centerX, height - safe.bottom - MobileLayout.s(48, height));
+    this.muteButton.setPosition(width - safe.side - MobileLayout.s(28, height), safe.top + MobileLayout.s(28, height));
 
     this.tapZone.setPosition(width / 2, height / 2);
     this.tapZone.setSize(width, height);
@@ -323,7 +337,7 @@ class PlayScene extends Phaser.Scene {
     }
 
     const trackY = this.trackTop + this.trackHeight / 2;
-    this.trackVisuals.drawTrack(this.trackCenterX, trackY, this.trackWidth, this.trackHeight);
+    this.trackVisuals.drawGroove(this.trackCenterX, trackY, this.trackWidth, this.trackHeight);
 
     if (this.zoneCenterY !== undefined) {
       this.trackVisuals.drawZone(
@@ -338,16 +352,28 @@ class PlayScene extends Phaser.Scene {
 
   updateDifficultyBar() {
     const progress = this.getDifficultyProgress();
-    const barWidth = Math.max(180 * progress, 0);
-    this.difficultyBarFill.setSize(barWidth, 8);
+    const barW = this.difficultyBarWidth || 200;
+    const fillW = Math.max(barW * progress, 0);
+    const barH = MobileLayout.s(8, this.scale.height);
+    const x = this.difficultyBarX;
+    const y = this.difficultyBarY;
+    const r = barH / 2;
 
-    const color = FX.getDifficultyColor(progress);
-    this.difficultyBarFill.setFillStyle(color);
+    this.difficultyBarBg.clear();
+    this.difficultyBarBg.fillStyle(Theme.colors.panel, 0.85);
+    this.difficultyBarBg.fillRoundedRect(x, y - barH / 2, barW, barH, r);
+
+    this.difficultyBarFill.clear();
+    if (fillW > 0) {
+      const color = FX.getDifficultyColor(progress);
+      this.difficultyBarFill.fillStyle(color, 1);
+      this.difficultyBarFill.fillRoundedRect(x, y - barH / 2, fillW, barH, r);
+    }
   }
 
   updateComboDisplay() {
     if (this.score >= 2) {
-      this.comboText.setText('🔥 ' + this.score + ' in a row');
+      this.comboText.setText('🔥 ' + this.score + ' streak');
       this.tweens.add({
         targets: this.comboText,
         alpha: 1,

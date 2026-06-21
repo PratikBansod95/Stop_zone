@@ -141,28 +141,25 @@ const SportsVisuals = {
     const progressLines = scene.add.graphics();
     const progressContainer = scene.add.container(0, 0);
 
-    const trophySize = MobileLayout.s(26, h);
+    const trophySize = MobileLayout.s(28, h);
     const trophy = this._createIcon(scene, 'trophy', trophySize, this.C.gold)
       || scene.add.text(0, 0, '🏆', { fontSize: trophySize + 'px' }).setOrigin(0.5);
+
     const bestLabel = this._label(scene, 'BEST', 2);
-    const bestValue = this._value(scene, String(Storage.getBestScore()), this.C.textGold, 28);
+    const bestValue = this._value(scene, String(Storage.getBestScore()), this.C.textGold, 30);
 
-    const scoreLabel = this._label(scene, 'SCORE', 0);
-    const scoreValue = this._value(scene, '0', this.C.textWhite, 52);
-    scoreValue.setColor(this.C.textWhite);
-    scoreValue.setShadow(0, 0, this.C.scoreGlow, 22, true, true);
+    const scoreLabel = this._label(scene, 'SCORE', 3);
+    const scoreValue = this._value(scene, '0', this.C.textCyan, 56);
+    scoreValue.setColor(this.C.textCyan);
+    scoreValue.setShadow(0, 0, this.C.scoreGlow, 24, true, true);
 
-    const roundLabel = this._label(scene, 'ROUND', 10);
-    const roundValue = this._value(scene, '1', this.C.textWhite, 28);
-
-    const pauseBtn = this._createIconButton(scene, 'pause', function () {
-      console.log('[Stop Zone] Pause tapped — hook pause logic here');
-    });
+    const roundLabel = this._label(scene, 'ROUND', 2);
+    const roundValue = this._value(scene, '1', this.C.textWhite, 32);
 
     const progressBalls = [];
     progressContainer.add(progressLines);
     for (let i = 0; i < SportsConfig.progressDotCount; i++) {
-      const ballSize = MobileLayout.s(16, h);
+      const ballSize = MobileLayout.s(15, h);
       const ballIcon = this._createIcon(scene, 'ball', ballSize)
         || scene.add.text(0, 0, '⚽', { fontSize: ballSize + 'px' }).setOrigin(0.5);
       progressBalls.push(ballIcon);
@@ -173,7 +170,7 @@ const SportsVisuals = {
       panelGfx,
       trophy, bestLabel, bestValue,
       scoreLabel, scoreValue,
-      roundLabel, roundValue, pauseBtn.container,
+      roundLabel, roundValue,
       progressContainer,
     ]);
 
@@ -188,7 +185,6 @@ const SportsVisuals = {
       scoreValue: scoreValue,
       bestValue: bestValue,
       roundValue: roundValue,
-      pauseBtn: pauseBtn,
       _introDone: false,
 
       playIntro: function (sceneRef) {
@@ -208,34 +204,43 @@ const SportsVisuals = {
         });
       },
 
-      layout: function (cx, topY, w, panelH) {
+      layout: function (cx, topY, w, statsH) {
         this._panelW = w;
-        this._panelH = panelH;
+        this._statsH = statsH;
+        this._progressH = MobileLayout.s(SportsConfig.visual.hudProgressHeight, scene.scale.height);
         this._panelCx = cx;
         this._panelTop = topY;
 
-        SportsVisuals._drawGlassPanel(panelGfx, cx, topY + panelH / 2, w, panelH, SportsVisuals.C.neonBlue);
+        SportsVisuals._drawScoreboardPanel(
+          panelGfx, cx, topY, w, statsH, this._progressH, SportsVisuals.C.neonBlue
+        );
 
-        const third = w / 3;
-        trophy.setPosition(cx - w / 2 + third * 0.5 - 22, topY + panelH * 0.34);
-        bestLabel.setPosition(cx - w / 2 + third * 0.5 + 6, topY + panelH * 0.2);
-        bestValue.setPosition(cx - w / 2 + third * 0.5 + 6, topY + panelH * 0.5);
+        const leftX = cx - w / 2 + w * 0.17;
+        const centerX = cx;
+        const rightX = cx + w / 2 - w * 0.17;
+        const midY = topY + statsH * 0.5;
 
-        scoreLabel.setPosition(cx, topY + panelH * 0.18);
-        scoreValue.setPosition(cx, topY + panelH * 0.54);
+        trophy.setPosition(leftX - MobileLayout.s(22, h), midY);
+        bestLabel.setPosition(leftX + MobileLayout.s(10, h), topY + statsH * 0.3);
+        bestLabel.setOrigin(0, 0.5);
+        bestValue.setPosition(leftX + MobileLayout.s(10, h), topY + statsH * 0.62);
+        bestValue.setOrigin(0, 0.5);
 
-        roundLabel.setPosition(cx + w / 2 - third * 0.5 - 28, topY + panelH * 0.2);
-        roundValue.setPosition(cx + w / 2 - third * 0.5 - 28, topY + panelH * 0.5);
-        pauseBtn.container.setPosition(cx + w / 2 - MobileLayout.s(34, h), topY + panelH * 0.4);
+        scoreLabel.setPosition(centerX, topY + statsH * 0.2);
+        scoreValue.setPosition(centerX, topY + statsH * 0.58);
+
+        roundLabel.setPosition(rightX, topY + statsH * 0.3);
+        roundValue.setPosition(rightX, topY + statsH * 0.62);
       },
 
       updateProgress: function (completed, total) {
+        const progressY = this._panelTop + this._statsH + this._progressH * 0.5;
         SportsVisuals._layoutProgressBalls(
           progressLines,
           progressBalls,
           this._panelCx,
-          this._panelTop + this._panelH + MobileLayout.s(SportsConfig.visual.progressGap, scene.scale.height),
-          this._panelW * 0.85,
+          progressY,
+          this._panelW * 0.88,
           completed,
           total,
           scene.scale.height
@@ -624,6 +629,7 @@ const SportsVisuals = {
       fontSize: MobileLayout.fontSize(size, scene.scale.height),
       color: SportsConfig.colors.textMuted,
       letterSpacing: letterSpacing || 2,
+      fontStyle: 'bold',
     };
   },
 
@@ -636,6 +642,40 @@ const SportsVisuals = {
     gfx.fillRoundedRect(x, y + capR * 0.5, w, h - capR, capR);
     gfx.fillStyle(0xffffff, 0.35);
     gfx.fillRoundedRect(x + 1, y + capR, Math.max(1, w - 2), h - capR * 2, capR - 1);
+  },
+
+  _drawScoreboardPanel(gfx, cx, topY, w, statsH, progressH, borderColor) {
+    gfx.clear();
+    const x = cx - w / 2;
+    const totalH = statsH + progressH;
+    const r = 16;
+
+    gfx.fillStyle(SportsVisuals.C.glass, 0.88);
+    gfx.fillRoundedRect(x, topY, w, totalH, r);
+
+    gfx.fillStyle(0xffffff, 0.05);
+    gfx.fillRoundedRect(x + 3, topY + 3, w - 6, statsH - 6, r - 2);
+
+    gfx.fillStyle(0x000000, 0.22);
+    gfx.fillRect(x + 4, topY + statsH, w - 8, progressH - 2);
+
+    gfx.lineStyle(1, borderColor, 0.25);
+    gfx.beginPath();
+    gfx.moveTo(x + w * 0.33, topY + 10);
+    gfx.lineTo(x + w * 0.33, topY + statsH - 10);
+    gfx.strokePath();
+    gfx.beginPath();
+    gfx.moveTo(x + w * 0.67, topY + 10);
+    gfx.lineTo(x + w * 0.67, topY + statsH - 10);
+    gfx.strokePath();
+
+    gfx.lineStyle(1, borderColor, 0.35);
+    gfx.beginPath();
+    gfx.moveTo(x + 12, topY + statsH);
+    gfx.lineTo(x + w - 12, topY + statsH);
+    gfx.strokePath();
+
+    SportsVisuals._strokeGlowRect(gfx, x, topY, w, totalH, r, borderColor, 1);
   },
 
   _drawGlassPanel(gfx, cx, cy, w, h, borderColor) {
@@ -755,19 +795,6 @@ const SportsVisuals = {
     gfx.fillStyle(color, 0.9);
     const w = 6;
     gfx.fillTriangle(x, y, x + dir * w, y - len / 2, x + dir * w, y + len / 2);
-  },
-
-  _createIconButton(scene, iconName, onClick) {
-    const size = MobileLayout.s(40, scene.scale.height);
-    const container = scene.add.container(0, 0);
-    const bg = scene.add.circle(0, 0, size / 2, SportsVisuals.C.glass, 0.9);
-    const iconSize = MobileLayout.s(20, scene.scale.height);
-    const icon = this._createIcon(scene, iconName, iconSize, this.C.cyan)
-      || scene.add.text(0, 0, '⏸', { fontSize: iconSize + 'px' }).setOrigin(0.5);
-    container.add([bg, icon]);
-    MobileInput.bindTap(bg, onClick);
-    bg.setStrokeStyle(2, SportsVisuals.C.neonBlue, 0.8);
-    return { container: container, bg: bg, icon: icon };
   },
 
   /** Score increment punch animation */

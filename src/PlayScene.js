@@ -206,10 +206,7 @@ class PlayScene extends Phaser.Scene {
 
   bindInput() {
     const self = this;
-    const ignore = [
-      this.muteButton,
-      this.sportsHud.pauseBtn.container,
-    ];
+    const ignore = [this.muteButton];
 
     MobileInput.bindSceneTap(this, function () {
       self.onStopInput();
@@ -280,12 +277,13 @@ class PlayScene extends Phaser.Scene {
     this.stadiumBg.resize(width, height);
 
     const hudW = width * 0.92;
-    const hudH = MobileLayout.s(SportsConfig.visual.hudPanelHeight, height, width);
+    const statsH = MobileLayout.s(SportsConfig.visual.hudPanelHeight, height, width);
+    const progressH = MobileLayout.s(SportsConfig.visual.hudProgressHeight, height, width);
     const hudTop = safe.top + MobileLayout.s(8, height, width);
-    this.sportsHud.layout(centerX, hudTop, hudW, hudH);
+    this.sportsHud.layout(centerX, hudTop, hudW, statsH);
 
-    const progressBottom = hudTop + hudH + MobileLayout.s(
-      SportsConfig.visual.progressGap + 12,
+    const progressBottom = hudTop + statsH + progressH + MobileLayout.s(
+      SportsConfig.visual.trackGapAfterProgress,
       height,
       width
     );

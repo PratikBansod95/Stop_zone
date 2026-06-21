@@ -5,7 +5,7 @@
 // Background: put your image in assets/backgrounds/ and set backgroundImage.
 //
 // Icons (assets/icons/):
-//   trophy, pause, speed, cleat, rush, focus, ball
+//   trophy, speed, ball
 //   Kenney.nl (CC0) + game-icons.net (CC BY 3.0) — see attribution below.
 //
 // To swap any icon, replace the PNG and keep the same filename, or change path.
@@ -26,7 +26,6 @@ const SportsConfig = {
    */
   icons: {
     trophy: { key: 'icon-trophy', path: 'assets/icons/trophy.png' },
-    pause: { key: 'icon-pause', path: 'assets/icons/pause.png' },
     speed: { key: 'icon-speed', path: 'assets/icons/speed.png' },
     ball: { key: 'icon-ball', path: 'assets/icons/ball.png' },
   },
@@ -60,8 +59,9 @@ const SportsConfig = {
 
   /** Visual tuning — glow intensity & spacing (safe to tweak). */
   visual: {
-    hudPanelHeight: 84,
-    progressGap: 14,
+    hudPanelHeight: 92,
+    hudProgressHeight: 28,
+    progressGap: 8,
     speedAboveTrack: 16,
     trackGapAfterProgress: 26,
     /** Outer lane width in design px (rails included). */
@@ -77,7 +77,7 @@ const SportsConfig = {
 
   /**
    * Icon attribution (free stock sources):
-   * - Kenney.nl Game Icons (CC0): trophy, pause, speed
+   * - Kenney.nl Game Icons (CC0): trophy, speed
    * - game-icons.net (CC BY 3.0): ball — https://game-icons.net
    */
   preloadIcons: function (loader) {

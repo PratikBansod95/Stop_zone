@@ -86,6 +86,9 @@ class GameOverScene extends Phaser.Scene {
       width: Math.min(this.scale.width * 0.82, MobileLayout.s(340, h)),
       height: MobileLayout.touchTarget(h) + 10,
       fontSize: MobileLayout.fontSize(30, h),
+      color: SportsConfig.colors.neonBlue,
+      hoverColor: SportsConfig.colors.neonBlueDim,
+      textColor: SportsConfig.colors.textWhite,
     });
 
     this.menuButton = UI.createButton(this, 0, 0, 'Menu', function () {

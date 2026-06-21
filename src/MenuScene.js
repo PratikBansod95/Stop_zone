@@ -16,15 +16,15 @@ class MenuScene extends Phaser.Scene {
     })).setOrigin(0.5);
     this.title.setShadow(0, 4, SportsConfig.colors.scoreGlow, 16, true, true);
 
-    this.subtitle = this.add.text(0, 0, 'Tap when the dot hits the zone', UI.textStyle({
+    this.subtitle = this.add.text(0, 0, 'Tap when the ball hits the zone', UI.textStyle({
       fontSize: MobileLayout.fontSize(24, h),
-      color: Theme.colors.textMuted,
+      color: SportsConfig.colors.textMuted,
       align: 'center',
     })).setOrigin(0.5);
 
     this.bestText = this.add.text(0, 0, 'Best · ' + Storage.getBestScore(), UI.textStyle({
       fontSize: MobileLayout.fontSize(22, h),
-      color: Theme.colors.highlight,
+      color: SportsConfig.colors.textGold,
       fontStyle: 'bold',
     })).setOrigin(0.5);
 
@@ -34,6 +34,9 @@ class MenuScene extends Phaser.Scene {
       width: Math.min(this.scale.width * 0.82, MobileLayout.s(340, h)),
       height: MobileLayout.touchTarget(h) + 10,
       fontSize: MobileLayout.fontSize(32, h),
+      color: SportsConfig.colors.neonBlue,
+      hoverColor: SportsConfig.colors.neonBlueDim,
+      textColor: SportsConfig.colors.textWhite,
     });
 
     this.helpButton = UI.createButton(this, 0, 0, 'How to Play', function () {
@@ -75,48 +78,73 @@ class MenuScene extends Phaser.Scene {
 
   buildHelpModal() {
     const h = this.scale.height;
-    const panelW = Math.min(this.scale.width * 0.92, MobileLayout.s(560, h));
-    const panelH = MobileLayout.s(440, h);
 
     this.helpOverlay = UI.createOverlay(this, function () {
       this.modalOpen = false;
     }.bind(this));
 
     const panel = this.add.container(0, 0);
-    const panelBg = this.add.rectangle(0, 0, panelW, panelH, Theme.colors.glass || Theme.colors.panel, 0.96);
-    panelBg.setStrokeStyle(2, Theme.colors.panelStroke, 0.6);
+    this.helpPanelBg = this.add.rectangle(0, 0, 1, 1, SportsConfig.colors.glass, 0.94);
+    this.helpPanelBg.setStrokeStyle(2, SportsConfig.colors.neonBlue, 0.85);
 
-    const title = this.add.text(0, -MobileLayout.s(150, h), 'How to Play', UI.textStyle({
-      fontSize: MobileLayout.fontSize(34, h),
+    this.helpTitle = this.add.text(0, 0, 'How to Play', UI.textStyle({
+      fontSize: MobileLayout.fontSize(32, h),
       fontStyle: 'bold',
-    })).setOrigin(0.5);
+      color: SportsConfig.colors.textWhite,
+    })).setOrigin(0.5, 0);
 
-    const body = this.add.text(0, MobileLayout.s(10, h),
-      'Watch the glowing dot slide\n' +
-      'up and down the track.\n\n' +
+    this.helpBody = this.add.text(0, 0,
+      'Watch the ball slide up and down the track.\n\n' +
       'Tap anywhere to stop it.\n\n' +
-      'Land inside the green zone\n' +
-      'to score — each hit speeds up.\n\n' +
-      'Miss once and it\'s game over.',
+      'Land inside the green target zone to score. Each hit speeds the ball up.\n\n' +
+      'Miss the zone and it\'s game over.',
       UI.textStyle({
-        fontSize: MobileLayout.fontSize(22, h),
-        color: Theme.colors.textMuted,
+        fontSize: MobileLayout.fontSize(20, h),
+        color: SportsConfig.colors.textMuted,
         align: 'center',
-        lineSpacing: 10,
+        lineSpacing: MobileLayout.s(6, h),
       })
-    ).setOrigin(0.5);
+    ).setOrigin(0.5, 0);
 
-    const closeButton = UI.createButton(this, 0, MobileLayout.s(160, h), 'Got it', function () {
+    this.helpCloseButton = UI.createButton(this, 0, 0, 'Got it', function () {
       this.closeHelpModal();
     }.bind(this), {
-      width: MobileLayout.s(240, h),
+      width: MobileLayout.s(260, h),
       height: MobileLayout.touchTarget(h),
       fontSize: MobileLayout.fontSize(24, h),
+      color: SportsConfig.colors.neonBlue,
+      hoverColor: SportsConfig.colors.neonBlueDim,
+      textColor: SportsConfig.colors.textWhite,
     });
 
-    panel.add([panelBg, title, body, closeButton]);
+    panel.add([this.helpPanelBg, this.helpTitle, this.helpBody, this.helpCloseButton]);
     this.helpOverlay.add(panel);
     this.helpPanel = panel;
+  }
+
+  layoutHelpPanel() {
+    const h = this.scale.height;
+    const w = this.scale.width;
+    const panelW = Math.min(w * 0.9, MobileLayout.s(540, h));
+    const panelH = MobileLayout.s(480, h);
+    const pad = MobileLayout.s(28, h);
+    const btnH = MobileLayout.touchTarget(h);
+    const top = -panelH / 2;
+
+    this.helpPanelBg.setSize(panelW, panelH);
+
+    this.helpTitle.setPosition(0, top + pad);
+    this.helpTitle.setFontSize(MobileLayout.fontSize(32, h));
+
+    const bodyTop = top + pad + MobileLayout.s(52, h);
+    this.helpBody.setPosition(0, bodyTop);
+    this.helpBody.setFontSize(MobileLayout.fontSize(20, h));
+    this.helpBody.setWordWrapWidth(panelW - pad * 2);
+
+    const bodyBottom = bodyTop + this.helpBody.height;
+    const buttonY = Math.max(bodyBottom + MobileLayout.s(24, h), top + panelH - pad - btnH / 2);
+
+    this.helpCloseButton.setPosition(0, buttonY);
   }
 
   layout() {
@@ -135,6 +163,7 @@ class MenuScene extends Phaser.Scene {
 
     this.helpOverlay.getAt(0).setSize(width, height);
     this.helpPanel.setPosition(centerX, height * 0.5);
+    this.layoutHelpPanel();
   }
 
   bindInput() {
@@ -171,6 +200,7 @@ class MenuScene extends Phaser.Scene {
 
   openHelpModal() {
     this.modalOpen = true;
+    this.layoutHelpPanel();
     this.helpOverlay.open();
   }
 

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Stop Zone</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #06020f;
+    }
+
+    #game-container {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+
+  <!-- YouTube Playables SDK — MUST load before any game code -->
+  <script src="https://www.youtube.com/game_api/v1"></script>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <script src="vendor/phaser.min.js"></script>
+  <script src="src/theme.js"></script>
+  <script src="src/YouTubeBridge.js"></script>
+  <script src="src/storage.js"></script>
+  <script src="src/sounds.js"></script>
+  <script src="src/fx.js"></script>
+  <script src="src/ui.js"></script>
+  <script src="src/BootScene.js"></script>
+  <script src="src/MenuScene.js"></script>
+  <script src="src/PlayScene.js"></script>
+  <script src="src/GameOverScene.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>

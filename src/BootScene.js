@@ -11,28 +11,19 @@ class BootScene extends Phaser.Scene {
   }
 
   create() {
-    const width = this.scale.width;
-    const height = this.scale.height;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const h = height;
-
     this.stadiumBg = SportsVisuals.createBackground(this);
-    this.stadiumBg.resize(width, height);
 
-    this.title = this.add.text(centerX, centerY - MobileLayout.s(80, h), 'Stop Zone', UI.textStyle({
-      fontSize: MobileLayout.fontSize(58, h),
+    this.title = this.add.text(0, 0, 'Stop Zone', UI.textStyle({
       fontStyle: 'bold',
       color: SportsConfig.colors.textWhite,
     })).setOrigin(0.5);
     this.title.setShadow(0, 4, SportsConfig.colors.scoreGlow, 14, true, true);
 
-    this.statusText = this.add.text(centerX, centerY + MobileLayout.s(10, h), 'Loading...', UI.textStyle({
-      fontSize: MobileLayout.fontSize(24, h),
+    this.statusText = this.add.text(0, 0, 'Loading...', UI.textStyle({
       color: SportsConfig.colors.textMuted,
     })).setOrigin(0.5);
 
-    this.spinner = this.add.circle(centerX, centerY + MobileLayout.s(70, h), MobileLayout.s(10, h), SportsConfig.colors.neonBlue, 0.9);
+    this.spinner = this.add.circle(0, 0, 10, SportsConfig.colors.neonBlue, 0.9);
 
     this.tweens.add({
       targets: this.spinner,
@@ -44,8 +35,31 @@ class BootScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
     });
 
+    this.layout();
+    this.scale.on('resize', this.layout, this);
+    this.events.once('shutdown', this.cleanup, this);
+
     YouTubeBridge.firstFrameReady();
     this.loadPlayerData();
+  }
+
+  cleanup() {
+    this.scale.off('resize', this.layout, this);
+  }
+
+  layout() {
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    this.stadiumBg.resize(width, height);
+    this.title.setPosition(centerX, centerY - MobileLayout.s(80, height, width));
+    this.title.setFontSize(MobileLayout.fontSize(58, height, width));
+    this.statusText.setPosition(centerX, centerY + MobileLayout.s(10, height, width));
+    this.statusText.setFontSize(MobileLayout.fontSize(24, height, width));
+    this.spinner.setPosition(centerX, centerY + MobileLayout.s(70, height, width));
+    this.spinner.setRadius(MobileLayout.s(10, height, width));
   }
 
   loadPlayerData() {

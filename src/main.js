@@ -1,5 +1,5 @@
-const GAME_WIDTH = 390;
-const GAME_HEIGHT = 844;
+const GAME_WIDTH = MobileLayout.designWidth;
+const GAME_HEIGHT = MobileLayout.designHeight;
 
 const config = {
   type: Phaser.AUTO,
@@ -8,7 +8,7 @@ const config = {
   parent: 'game-container',
   backgroundColor: Theme.colors.bgCss,
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   input: {
@@ -35,9 +35,28 @@ game.canvas.oncontextmenu = function (event) {
   event.preventDefault();
 };
 
-window.addEventListener('resize', function () {
-  game.scale.refresh();
-});
+/** Resize game world to match container (iframe, phone rotation, browser chrome). */
+function refreshGameSize() {
+  const container = document.getElementById('game-container');
+  if (!container || !game.scale) {
+    return;
+  }
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  if (w > 0 && h > 0) {
+    game.scale.resize(w, h);
+  }
+}
+
+window.addEventListener('resize', refreshGameSize);
+window.addEventListener('orientationchange', refreshGameSize);
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', refreshGameSize);
+  window.visualViewport.addEventListener('scroll', refreshGameSize);
+}
+
+game.events.once('ready', refreshGameSize);
 
 function unlockAudio() {
   SoundManager.ensureContext();

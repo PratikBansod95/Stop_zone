@@ -445,34 +445,32 @@ const SportsVisuals = {
   createBallMarker(scene, diameter) {
     const container = scene.add.container(0, 0);
     const trailGfx = scene.add.graphics();
-    const glowContainer = scene.add.container(0, 0);
+    const glowGfx = scene.add.graphics();
+    glowGfx.setBlendMode(Phaser.BlendModes.ADD);
 
-    const outerGlow = scene.add.circle(0, 0, diameter * 1.35, SportsVisuals.C.neonBlue, 0.1);
-    const midGlow = scene.add.circle(0, 0, diameter * 1.05, SportsVisuals.C.cyan, 0.2);
-    const innerGlow = scene.add.circle(0, 0, diameter * 0.78, SportsVisuals.C.neonGreen, 0.16);
-    glowContainer.add([outerGlow, midGlow, innerGlow]);
+    const ballR = diameter / 2;
+    SportsVisuals._drawBallHalo(glowGfx, ballR);
 
     const ball = this._createIcon(scene, 'ball', diameter)
       || scene.add.text(0, 0, '⚽', { fontSize: diameter + 'px' }).setOrigin(0.5);
-    if (ball.setShadow) {
-      ball.setShadow(0, 0, SportsConfig.colors.scoreGlow, 18, true, true);
-    }
 
-    container.add([trailGfx, glowContainer, ball]);
+    const rimGfx = scene.add.graphics();
+    rimGfx.setBlendMode(Phaser.BlendModes.ADD);
+    SportsVisuals._drawBallRim(rimGfx, ballR);
+
+    container.add([trailGfx, glowGfx, ball, rimGfx]);
     container.trailHistory = [];
-
-    const glowLayers = [outerGlow, midGlow, innerGlow];
 
     return {
       container: container,
       ball: ball,
       trailGfx: trailGfx,
-      glowContainer: glowContainer,
-      glowLayers: glowLayers,
+      glowGfx: glowGfx,
+      rimGfx: rimGfx,
 
       updateTrail: function (x, y, direction) {
         const history = container.trailHistory;
-        history.unshift({ x: x, y: y, dir: direction });
+        history.unshift({ dir: direction });
         if (history.length > 8) {
           history.pop();
         }
@@ -483,21 +481,21 @@ const SportsVisuals = {
         history.forEach(function (pt, i) {
           const alpha = 0.34 - i * 0.038;
           const stretch = (i + 1) * 11;
-          const yEnd = pt.y + behind * stretch;
+          const yEnd = behind * stretch;
           const width = Math.max(1.5, 3.5 - i * 0.35);
 
           trailGfx.lineStyle(width, SportsVisuals.C.cyan, Math.max(alpha, 0.05));
           trailGfx.beginPath();
-          trailGfx.moveTo(pt.x - 5, yEnd);
-          trailGfx.lineTo(pt.x - 5, pt.y);
+          trailGfx.moveTo(-5, yEnd);
+          trailGfx.lineTo(-5, 0);
           trailGfx.strokePath();
           trailGfx.beginPath();
-          trailGfx.moveTo(pt.x + 5, yEnd);
-          trailGfx.lineTo(pt.x + 5, pt.y);
+          trailGfx.moveTo(5, yEnd);
+          trailGfx.lineTo(5, 0);
           trailGfx.strokePath();
 
           trailGfx.fillStyle(SportsVisuals.C.neonBlue, Math.max(alpha * 0.3, 0));
-          trailGfx.fillCircle(pt.x, pt.y + behind * (stretch * 0.45), diameter * 0.22 - i * 1.5);
+          trailGfx.fillCircle(0, behind * (stretch * 0.45), diameter * 0.22 - i * 1.5);
         });
       },
 
@@ -506,9 +504,9 @@ const SportsVisuals = {
           this.pulseTween.stop();
         }
         this.pulseTween = sceneRef.tweens.add({
-          targets: glowLayers,
-          scale: { from: 1, to: 1.18 },
-          alpha: { from: 0.12, to: 0.28 },
+          targets: [glowGfx, rimGfx],
+          scale: { from: 1, to: 1.14 },
+          alpha: { from: 1, to: 0.72 },
           duration: 650,
           yoyo: true,
           repeat: -1,
@@ -521,9 +519,8 @@ const SportsVisuals = {
           this.pulseTween.stop();
           this.pulseTween = null;
         }
-        outerGlow.setScale(1).setAlpha(0.1);
-        midGlow.setScale(1).setAlpha(0.2);
-        innerGlow.setScale(1).setAlpha(0.16);
+        glowGfx.setScale(1).setAlpha(1);
+        rimGfx.setScale(1).setAlpha(1);
       },
 
       squashStretch: function (sceneRef) {
@@ -540,9 +537,10 @@ const SportsVisuals = {
         if (ball.setAlpha) {
           ball.setAlpha(0.7);
         }
-        outerGlow.setFillStyle(SportsVisuals.C.redGlow, 0.22);
-        midGlow.setFillStyle(SportsVisuals.C.redGlow, 0.38);
-        innerGlow.setFillStyle(SportsVisuals.C.redGlow, 0.28);
+        glowGfx.clear();
+        rimGfx.clear();
+        SportsVisuals._drawBallHalo(glowGfx, ballR, SportsVisuals.C.redGlow);
+        SportsVisuals._drawBallRim(rimGfx, ballR, SportsVisuals.C.redGlow);
       },
     };
   },
@@ -571,6 +569,36 @@ const SportsVisuals = {
   // ===========================================================================
   // 7. SHARED HELPERS — glass panels, glow strokes, icons, text styles
   // ===========================================================================
+
+  /** Soft additive halo rings centered on the ball (local 0,0). */
+  _drawBallHalo(gfx, ballR, color) {
+    gfx.clear();
+    const core = color || SportsVisuals.C.cyan;
+    const outer = color || SportsVisuals.C.neonBlue;
+    const edge = color || SportsVisuals.C.neonGreen;
+    const rings = [
+      { spread: 2, alpha: 0.38, color: core },
+      { spread: 7, alpha: 0.3, color: core },
+      { spread: 14, alpha: 0.22, color: outer },
+      { spread: 22, alpha: 0.14, color: outer },
+      { spread: 32, alpha: 0.08, color: edge },
+      { spread: 44, alpha: 0.04, color: edge },
+    ];
+    rings.forEach(function (ring) {
+      gfx.fillStyle(ring.color, ring.alpha);
+      gfx.fillCircle(0, 0, ballR + ring.spread);
+    });
+  },
+
+  /** Bright rim stroke sitting on the ball edge. */
+  _drawBallRim(gfx, ballR, color) {
+    gfx.clear();
+    const c = color || SportsVisuals.C.neonGreen;
+    gfx.lineStyle(2.5, c, 0.55);
+    gfx.strokeCircle(0, 0, ballR + 1);
+    gfx.lineStyle(5, SportsVisuals.C.cyan, 0.18);
+    gfx.strokeCircle(0, 0, ballR + 4);
+  },
 
   _createIcon(scene, name, size, tint) {
     const key = SportsConfig.iconKey(name);

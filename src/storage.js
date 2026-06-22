@@ -1,24 +1,31 @@
 // =============================================================================
 // STORAGE — player save data (best score)
 //
-// Uses YouTube cloud save inside Playables (ytgame.game.loadData / saveData).
-// Falls back to localStorage when testing locally in a normal browser.
+// YouTube Playables: ytgame.game.loadData() / saveData() (max 3 MiB UTF-16 string).
+// Local testing: localStorage fallback when not in IN_PLAYABLES_ENV.
 //
-// Rule from YouTube: always await loadData() before calling saveData().
+// Always await loadData() before saveData().
 // =============================================================================
 
 const Storage = {
-  LOCAL_KEY: 'stopZone_save_v1',
+  LOCAL_KEY: 'strikeMaster_save_v1',
   _data: { bestScore: 0 },
   _loadComplete: false,
   _loadPromise: null,
 
-  // ---------------------------------------------------------------------------
-  // Save format
-  // ---------------------------------------------------------------------------
-
   _defaultData() {
     return { bestScore: 0 };
+  },
+
+  _clampScore(value) {
+    const n = Math.floor(Number(value) || 0);
+    if (n < 0) {
+      return 0;
+    }
+    if (n > Number.MAX_SAFE_INTEGER) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+    return n;
   },
 
   _parseSave(raw) {
@@ -29,7 +36,7 @@ const Storage = {
     try {
       const parsed = JSON.parse(raw);
       return {
-        bestScore: typeof parsed.bestScore === 'number' ? parsed.bestScore : 0,
+        bestScore: this._clampScore(parsed.bestScore),
       };
     } catch (error) {
       console.warn('[Strike Master · Storage] Could not read save data, using defaults.');
@@ -38,12 +45,16 @@ const Storage = {
   },
 
   _serialize() {
-    return JSON.stringify(this._data);
-  },
+    const payload = JSON.stringify(this._data);
 
-  // ---------------------------------------------------------------------------
-  // loadData / saveData
-  // ---------------------------------------------------------------------------
+    if (typeof payload.isWellFormed === 'function' && !payload.isWellFormed()) {
+      console.warn('[Strike Master · Storage] Save payload was not well-formed UTF-16; resetting.');
+      this._data = this._defaultData();
+      return JSON.stringify(this._data);
+    }
+
+    return payload;
+  },
 
   loadData() {
     if (this._loadPromise) {
@@ -104,27 +115,19 @@ const Storage = {
     return Promise.resolve(true);
   },
 
-  // ---------------------------------------------------------------------------
-  // Best score helpers
-  // ---------------------------------------------------------------------------
-
   getBestScore() {
-    return this._data.bestScore || 0;
+    return this._clampScore(this._data.bestScore || 0);
   },
 
-  /** Updates best score in memory only (call saveData() to persist). */
   setBestScoreLocal(score) {
-    if (score > this.getBestScore()) {
-      this._data.bestScore = score;
+    const next = this._clampScore(score);
+    if (next > this.getBestScore()) {
+      this._data.bestScore = next;
       return true;
     }
     return false;
   },
 
-  /**
-   * Updates best score and saves immediately.
-   * Returns true if this was a new personal best.
-   */
   setBestScore(score) {
     const isNew = this.setBestScoreLocal(score);
     if (isNew) {

@@ -179,9 +179,26 @@ class PlayScene extends Phaser.Scene {
 
     this.scale.on('resize', this.onResize, this);
     this.events.once('shutdown', this.cleanup, this);
+
+    this.game.events.on('yt-pause', this.onPlatformPause, this);
+    this.game.events.on('yt-resume', this.onPlatformResume, this);
+  }
+
+  onPlatformPause() {
+    if (this.barTween && this.barTween.isPlaying()) {
+      this.barTween.pause();
+    }
+  }
+
+  onPlatformResume() {
+    if (this.barTween && !this.isStopped && !this.gameEnded) {
+      this.barTween.resume();
+    }
   }
 
   cleanup() {
+    this.game.events.off('yt-pause', this.onPlatformPause, this);
+    this.game.events.off('yt-resume', this.onPlatformResume, this);
     this.scale.off('resize', this.onResize, this);
     if (this.barTween) {
       this.barTween.stop();

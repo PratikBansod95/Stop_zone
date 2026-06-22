@@ -67,6 +67,7 @@ class MenuScene extends Phaser.Scene {
     this.layout();
     this.bindInput();
 
+    // gameReady() only after loadData() finished and menu is interactive (not loading).
     YouTubeBridge.gameReady();
 
     this.scale.on('resize', this.layout, this);

@@ -82,6 +82,7 @@ class BootScene extends Phaser.Scene {
     const self = this;
 
     Storage.loadData().then(function () {
+      YouTubeBridge.syncEngagementFromSave();
       self.statusText.setText('Ready!');
       self.time.delayedCall(250, function () {
         self.scene.start('MenuScene');

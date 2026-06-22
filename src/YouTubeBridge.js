@@ -1,13 +1,14 @@
 // =============================================================================
-// YOUTUBE PLAYABLES SDK — bridge between your game and YouTube
+// YOUTUBE PLAYABLES SDK — bridge between Strike Master and ytgame
 //
-// This file wraps all ytgame calls in one place. The rest of the game talks
-// to YouTubeBridge instead of calling ytgame directly.
+// SDK reference: https://developers.google.com/youtube/gaming/playables/reference/sdk
 //
-// YouTube Playables wiring (already connected in main.js):
-//   YouTubeBridge.initPlatform(game);
+// Required lifecycle:
+//   1. SDK script in index.html BEFORE game code
+//   2. firstFrameReady() when first frame is visible (BootScene)
+//   3. gameReady() when main menu is interactive — NOT during loading (MenuScene)
 //
-// To test locally, open the browser console — each SDK call logs a message.
+// Wired in main.js: YouTubeBridge.initPlatform(game);
 // =============================================================================
 
 const YouTubeBridge = {
@@ -15,12 +16,12 @@ const YouTubeBridge = {
   _gameReady: false,
   _game: null,
   _debug: true,
+  _healthInstalled: false,
 
   // ---------------------------------------------------------------------------
-  // Environment detection
+  // Environment detection — never override global ytgame
   // ---------------------------------------------------------------------------
 
-  /** True when running inside YouTube (not plain local browser testing). */
   inPlayablesEnv() {
     return typeof ytgame !== 'undefined' && ytgame.IN_PLAYABLES_ENV === true;
   },
@@ -33,10 +34,7 @@ const YouTubeBridge = {
   // Lifecycle — firstFrameReady / gameReady
   // ---------------------------------------------------------------------------
 
-  /**
-   * Call when the loading/splash screen is first visible to the player.
-   * Must run BEFORE gameReady().
-   */
+  /** Call when the loading/splash screen first renders. Must run before gameReady(). */
   firstFrameReady() {
     if (this._firstFrameReady) {
       return;
@@ -50,9 +48,7 @@ const YouTubeBridge = {
     this._log('firstFrameReady()');
   },
 
-  /**
-   * Call once when the main menu is fully interactive (no splash visible).
-   */
+  /** Call once the main menu is interactive. Do not call while a loading screen is up. */
   gameReady() {
     if (this._gameReady) {
       return;
@@ -80,15 +76,22 @@ const YouTubeBridge = {
   },
 
   // ---------------------------------------------------------------------------
-  // Scores — sendScore must match bestScore in save data (cert requirement)
+  // Scores — integer best score aligned with cloud save (engagement.sendScore)
   // ---------------------------------------------------------------------------
 
-  /**
-   * Sends the player's best score to YouTube.
-   * Always pass Storage.getBestScore() so it matches cloud save data.
-   */
+  _clampScore(value) {
+    const n = Math.floor(Number(value) || 0);
+    if (n < 0) {
+      return 0;
+    }
+    if (n > Number.MAX_SAFE_INTEGER) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+    return n;
+  },
+
   sendScore(bestScore) {
-    const value = Math.floor(bestScore);
+    const value = this._clampScore(bestScore);
 
     if (this.isSdkLoaded() && ytgame.engagement) {
       ytgame.engagement.sendScore({ value: value }).catch(function (error) {
@@ -99,9 +102,14 @@ const YouTubeBridge = {
     this._log('sendScore(' + value + ')');
   },
 
+  /** After loadData(), publish stored best score to YouTube leaderboards. */
+  syncEngagementFromSave() {
+    this.sendScore(Storage.getBestScore());
+  },
+
   /**
-   * Called at the end of each successful round when the run score changes.
-   * Updates best score in save data if needed, then reports to YouTube.
+   * Called after each successful round.
+   * Persists a new best score, then reports the same value via sendScore().
    */
   onRoundScoreChanged(runScore) {
     if (runScore > Storage.getBestScore()) {
@@ -113,14 +121,16 @@ const YouTubeBridge = {
   },
 
   // ---------------------------------------------------------------------------
-  // Pause / resume + audio — YouTube system handlers
+  // Platform init — pause / resume / audio / health
   // ---------------------------------------------------------------------------
 
   initPlatform(game) {
     this._game = game;
+    this._debug = !this.inPlayablesEnv();
 
     if (!this.isSdkLoaded() || !ytgame.system) {
-      this._log('SDK not in YouTube environment — pause/audio hooks skipped');
+      this._log('SDK not in YouTube environment — platform hooks skipped');
+      this.installHealthHandlers();
       return;
     }
 
@@ -133,14 +143,18 @@ const YouTubeBridge = {
     });
 
     SoundManager.bindPlatformAudio(ytgame.system);
+    this.installHealthHandlers();
     this._log('Platform pause/resume/audio handlers registered');
   },
 
   _onPause() {
-    this._log('onPause — freezing game');
+    this._log('onPause — saving data and freezing game');
+
+    Storage.saveData();
 
     if (this._game) {
       this._game.loop.sleep();
+      this._game.events.emit('yt-pause');
     }
 
     if (SoundManager.context && SoundManager.context.state === 'running') {
@@ -153,6 +167,7 @@ const YouTubeBridge = {
 
     if (this._game) {
       this._game.loop.wake();
+      this._game.events.emit('yt-resume');
     }
 
     if (SoundManager.isEnabled()) {
@@ -160,8 +175,35 @@ const YouTubeBridge = {
     }
   },
 
+  installHealthHandlers() {
+    if (this._healthInstalled) {
+      return;
+    }
+    this._healthInstalled = true;
+
+    window.addEventListener('error', function () {
+      if (typeof ytgame !== 'undefined' && ytgame.health) {
+        try {
+          ytgame.health.logError();
+        } catch (e) {
+          // best-effort
+        }
+      }
+    });
+
+    window.addEventListener('unhandledrejection', function () {
+      if (typeof ytgame !== 'undefined' && ytgame.health) {
+        try {
+          ytgame.health.logWarning();
+        } catch (e) {
+          // best-effort
+        }
+      }
+    });
+  },
+
   // ---------------------------------------------------------------------------
-  // Debug helpers — inspect state from the browser console
+  // Debug helpers
   // ---------------------------------------------------------------------------
 
   getStatus() {
@@ -181,5 +223,4 @@ const YouTubeBridge = {
   },
 };
 
-// Expose for console testing: type `YouTubeBridge.getStatus()` in DevTools
 window.YouTubeBridge = YouTubeBridge;

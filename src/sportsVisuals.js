@@ -267,42 +267,58 @@ const SportsVisuals = {
     const bg = scene.add.graphics();
     const icon = this._createIcon(scene, 'speed', 16, this.C.cyan)
       || scene.add.text(0, 0, '⏱', { fontSize: '16px' }).setOrigin(0.5);
-    const label = scene.add.text(0, 0, 'SPEED', this._labelStyle(scene, 11)).setOrigin(0, 0.5);
-    const value = scene.add.text(0, 0, '1.00x', this._labelStyle(scene, 15)).setOrigin(0, 0.5);
+    const label = scene.add.text(0, 0, 'SPEED', this._labelStyle(scene, 10)).setOrigin(0, 0.5);
+    const value = scene.add.text(0, 0, '1.00x', this._labelStyle(scene, 14)).setOrigin(1, 0.5);
     value.setColor(this.C.textCyan);
     value.setFontStyle('bold');
     value.setShadow(0, 0, this.C.scoreGlow, 8, true, true);
 
     container.add([bg, icon, label, value]);
 
-    return {
+    const badgeRef = {
       container: container,
       value: value,
+      _lastCx: 0,
+      _lastY: 0,
+
       layout: function (cx, y) {
+        badgeRef._lastCx = cx;
+        badgeRef._lastY = y;
+
         const sh = scene.scale.height;
         const sw = scene.scale.width;
-        const w = MobileLayout.s(142, sh, sw);
-        const h = MobileLayout.s(30, sh, sw);
-        const pad = MobileLayout.s(16, sh, sw);
+        const innerPad = MobileLayout.s(12, sh, sw);
+        const iconSize = MobileLayout.s(16, sh, sw);
+        const gap = MobileLayout.s(8, sh, sw);
+        const minW = MobileLayout.s(136, sh, sw);
+        const h = MobileLayout.s(32, sh, sw);
 
         container.setPosition(cx, y);
+
+        MobileLayout.refreshIcon(icon, 16, sh, sw);
+        MobileLayout.refreshFont(label, 10, sh, sw);
+        MobileLayout.refreshFont(value, 14, sh, sw);
+
+        const contentW = iconSize + gap + label.width + gap + value.width;
+        const w = Math.max(minW, contentW + innerPad * 2);
+
         bg.clear();
         bg.fillStyle(SportsVisuals.C.glass, 0.88);
         bg.fillRoundedRect(-w / 2, -h / 2, w, h, h / 2);
         SportsVisuals._strokeGlowRect(bg, -w / 2, -h / 2, w, h, h / 2, SportsVisuals.C.neonBlue, 0.95);
 
-        MobileLayout.refreshIcon(icon, 16, sh, sw);
-        MobileLayout.refreshFont(label, 11, sh, sw);
-        MobileLayout.refreshFont(value, 15, sh, sw);
-
-        icon.setPosition(-w / 2 + pad, 0);
-        label.setPosition(-w / 2 + pad + MobileLayout.s(16, sh, sw), 0);
-        value.setPosition(-w / 2 + MobileLayout.s(82, sh, sw), 0);
+        icon.setPosition(-w / 2 + innerPad + iconSize / 2, 0);
+        label.setPosition(-w / 2 + innerPad + iconSize + gap, 0);
+        value.setPosition(w / 2 - innerPad, 0);
       },
+
       setMultiplier: function (mult) {
         value.setText(mult.toFixed(2) + 'x');
+        badgeRef.layout(badgeRef._lastCx, badgeRef._lastY);
       },
     };
+
+    return badgeRef;
   },
 
   // ===========================================================================

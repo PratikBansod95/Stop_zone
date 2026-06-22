@@ -44,7 +44,7 @@ class GameOverScene extends Phaser.Scene {
     })).setOrigin(0.5);
     this.scoreValue.setShadow(0, 0, C.scoreGlow, 18, true, true);
 
-    this.bestLabel = this.add.text(0, 0, 'BEST', UI.textStyle({
+    this.bestLabel = this.add.text(0, 0, 'GLOBAL BEST', UI.textStyle({
       fontSize: MobileLayout.fontSize(14, h, w),
       color: C.textMuted,
       letterSpacing: 3,
@@ -257,7 +257,8 @@ class GameOverScene extends Phaser.Scene {
     this.scoreValue.setPosition(centerX - colOffset, row2);
     MobileLayout.refreshFont(this.scoreValue, 64, height, width);
 
-    MobileLayout.refreshFont(this.bestLabel, 14, height, width);
+    MobileLayout.refreshFont(this.bestLabel, 13, height, width);
+    this.bestLabel.setText(width < 360 ? 'G.BEST' : 'GLOBAL BEST');
     this.bestLabel.setPosition(centerX + colOffset, row1);
     this.bestValue.setPosition(centerX + colOffset, row2);
     MobileLayout.refreshFont(this.bestValue, 36, height, width);

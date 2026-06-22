@@ -32,7 +32,7 @@ class MenuScene extends Phaser.Scene {
       align: 'center',
     })).setOrigin(0.5);
 
-    this.bestText = this.add.text(0, 0, 'Best · ' + Storage.getBestScore(), UI.textStyle({
+    this.bestText = this.add.text(0, 0, 'Global Best · ' + Storage.getBestScore(), UI.textStyle({
       fontSize: MobileLayout.fontSize(22, h),
       color: SportsConfig.colors.textGold,
       fontStyle: 'bold',
@@ -185,6 +185,7 @@ class MenuScene extends Phaser.Scene {
     this.subtitle.setWordWrapWidth(width * 0.88);
 
     MobileLayout.refreshFont(this.bestText, 22, height, width);
+    this.bestText.setText('Global Best · ' + Storage.getBestScore());
     this.bestText.setPosition(centerX, titleY + MobileLayout.s(114, height, width));
 
     this.playButton.layout(centerX, playY, {

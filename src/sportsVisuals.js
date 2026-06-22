@@ -143,7 +143,7 @@ const SportsVisuals = {
     const trophy = this._createIcon(scene, 'trophy', 28, this.C.gold)
       || scene.add.text(0, 0, '🏆', { fontSize: '28px' }).setOrigin(0.5);
 
-    const bestLabel = this._label(scene, 'BEST', 2);
+    const bestLabel = this._label(scene, 'GLOBAL BEST', 1);
     const bestValue = this._value(scene, String(Storage.getBestScore()), this.C.textGold, 30);
 
     const scoreLabel = this._label(scene, 'SCORE', 3);
@@ -216,7 +216,8 @@ const SportsVisuals = {
         );
 
         MobileLayout.refreshIcon(trophy, 28, sh, sw);
-        MobileLayout.refreshFont(bestLabel, 12, sh, sw);
+        bestLabel.setText(SportsVisuals._globalBestLabelText(sw));
+        MobileLayout.refreshFont(bestLabel, sw < 360 ? 9 : 11, sh, sw);
         MobileLayout.refreshFont(bestValue, 30, sh, sw);
         MobileLayout.refreshFont(scoreLabel, 12, sh, sw);
         MobileLayout.refreshFont(scoreValue, 56, sh, sw);
@@ -710,6 +711,10 @@ const SportsVisuals = {
         linesGfx.strokePath();
       }
     }
+  },
+
+  _globalBestLabelText(screenWidth) {
+    return screenWidth < 360 ? 'G.BEST' : 'GLOBAL BEST';
   },
 
   _label(scene, text, letterSpacing) {

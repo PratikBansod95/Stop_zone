@@ -59,7 +59,7 @@ const YouTubeBridge = {
     }
 
     if (!this._firstFrameReady) {
-      console.error('[Stop Zone · YouTube SDK] gameReady() called before firstFrameReady()');
+      console.error('[Strike Master · YouTube SDK] gameReady() called before firstFrameReady()');
       return;
     }
 
@@ -92,7 +92,7 @@ const YouTubeBridge = {
 
     if (this.isSdkLoaded() && ytgame.engagement) {
       ytgame.engagement.sendScore({ value: value }).catch(function (error) {
-        console.warn('[Stop Zone · YouTube SDK] sendScore failed', error);
+        console.warn('[Strike Master · YouTube SDK] sendScore failed', error);
       });
     }
 
@@ -176,7 +176,7 @@ const YouTubeBridge = {
 
   _log(message) {
     if (this._debug) {
-      console.info('[Stop Zone · YouTube SDK]', message);
+      console.info('[Strike Master · YouTube SDK]', message);
     }
   },
 };

@@ -13,11 +13,22 @@ class BootScene extends Phaser.Scene {
   create() {
     this.stadiumBg = SportsVisuals.createBackground(this);
 
-    this.title = this.add.text(0, 0, 'Stop Zone', UI.textStyle({
+    this.titleGroup = this.add.container(0, 0);
+
+    const h = this.scale.height;
+    const ballSize = MobileLayout.s(64, h);
+    this.titleBall = SportsVisuals._createIcon(this, 'ball', ballSize)
+      || this.add.text(0, 0, '⚽', {
+        fontSize: ballSize + 'px',
+      }).setOrigin(0.5);
+
+    this.title = this.add.text(0, 0, SportsConfig.gameName, UI.textStyle({
       fontStyle: 'bold',
       color: SportsConfig.colors.textWhite,
     })).setOrigin(0.5);
     this.title.setShadow(0, 4, SportsConfig.colors.scoreGlow, 14, true, true);
+
+    this.titleGroup.add([this.titleBall, this.title]);
 
     this.statusText = this.add.text(0, 0, 'Loading...', UI.textStyle({
       color: SportsConfig.colors.textMuted,
@@ -54,8 +65,12 @@ class BootScene extends Phaser.Scene {
     const centerY = height / 2;
 
     this.stadiumBg.resize(width, height);
-    this.title.setPosition(centerX, centerY - MobileLayout.s(80, height, width));
+
+    this.titleGroup.setPosition(centerX, centerY - MobileLayout.s(80, height, width));
+    this.titleBall.setPosition(0, -MobileLayout.s(48, height, width));
+    this.title.setPosition(0, MobileLayout.s(18, height, width));
     this.title.setFontSize(MobileLayout.fontSize(58, height, width));
+
     this.statusText.setPosition(centerX, centerY + MobileLayout.s(10, height, width));
     this.statusText.setFontSize(MobileLayout.fontSize(24, height, width));
     this.spinner.setPosition(centerX, centerY + MobileLayout.s(70, height, width));

@@ -11,6 +11,8 @@
 // To swap any icon, replace the PNG and keep the same filename, or change path.
 
 const SportsConfig = {
+  gameName: 'Strike Master',
+
   /** Relative path from project root. Set to null to use procedural art only. */
   backgroundImage: 'assets/backgrounds/stadium-bg.png',
 

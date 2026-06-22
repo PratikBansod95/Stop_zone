@@ -9,12 +9,22 @@ class MenuScene extends Phaser.Scene {
 
     const h = this.scale.height;
 
-    this.title = this.add.text(0, 0, 'Stop Zone', UI.textStyle({
+    this.titleGroup = this.add.container(0, 0);
+
+    const ballSize = MobileLayout.s(80, h);
+    this.titleBall = SportsVisuals._createIcon(this, 'ball', ballSize)
+      || this.add.text(0, 0, '⚽', {
+        fontSize: ballSize + 'px',
+      }).setOrigin(0.5);
+
+    this.title = this.add.text(0, 0, SportsConfig.gameName, UI.textStyle({
       fontSize: MobileLayout.fontSize(68, h),
       fontStyle: 'bold',
       color: SportsConfig.colors.textWhite,
     })).setOrigin(0.5);
     this.title.setShadow(0, 4, SportsConfig.colors.scoreGlow, 16, true, true);
+
+    this.titleGroup.add([this.titleBall, this.title]);
 
     this.subtitle = this.add.text(0, 0, 'Tap when the ball hits the zone', UI.textStyle({
       fontSize: MobileLayout.fontSize(24, h),
@@ -156,9 +166,15 @@ class MenuScene extends Phaser.Scene {
     const safe = MobileLayout.safeInsets(width, height);
 
     this.stadiumBg.resize(width, height);
-    this.title.setPosition(centerX, safe.top + height * 0.14);
-    this.subtitle.setPosition(centerX, safe.top + height * 0.22);
-    this.bestText.setPosition(centerX, safe.top + height * 0.28);
+
+    const titleY = safe.top + height * 0.15;
+    this.titleGroup.setPosition(centerX, titleY);
+    this.titleBall.setPosition(0, -MobileLayout.s(58, height));
+    this.title.setPosition(0, MobileLayout.s(24, height));
+    this.title.setFontSize(MobileLayout.fontSize(68, height));
+
+    this.subtitle.setPosition(centerX, titleY + MobileLayout.s(78, height));
+    this.bestText.setPosition(centerX, titleY + MobileLayout.s(114, height));
     this.playButton.setPosition(centerX, height * 0.48);
     this.helpButton.setPosition(centerX, height * 0.60);
     UI.layoutMuteButton(this.muteButton, safe, width, height, 'bottom-left');

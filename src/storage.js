@@ -32,7 +32,7 @@ const Storage = {
         bestScore: typeof parsed.bestScore === 'number' ? parsed.bestScore : 0,
       };
     } catch (error) {
-      console.warn('[Stop Zone · Storage] Could not read save data, using defaults.');
+      console.warn('[Strike Master · Storage] Could not read save data, using defaults.');
       return this._defaultData();
     }
   },
@@ -61,10 +61,10 @@ const Storage = {
       return ytgame.game.loadData().then(function (raw) {
         self._data = self._parseSave(raw);
         self._loadComplete = true;
-        console.info('[Stop Zone · Storage] Loaded from YouTube cloud save.', self._data);
+        console.info('[Strike Master · Storage] Loaded from YouTube cloud save.', self._data);
         return self._data;
       }).catch(function (error) {
-        console.warn('[Stop Zone · Storage] YouTube loadData failed, using defaults.', error);
+        console.warn('[Strike Master · Storage] YouTube loadData failed, using defaults.', error);
         self._data = self._defaultData();
         self._loadComplete = true;
         return self._data;
@@ -75,14 +75,14 @@ const Storage = {
       const raw = window.localStorage.getItem(self.LOCAL_KEY);
       self._data = self._parseSave(raw);
       self._loadComplete = true;
-      console.info('[Stop Zone · Storage] Loaded from localStorage (local testing).', self._data);
+      console.info('[Strike Master · Storage] Loaded from localStorage (local testing).', self._data);
       return self._data;
     });
   },
 
   saveData() {
     if (!this._loadComplete) {
-      console.warn('[Stop Zone · Storage] saveData skipped — loadData has not finished yet.');
+      console.warn('[Strike Master · Storage] saveData skipped — loadData has not finished yet.');
       return Promise.resolve(false);
     }
 
@@ -91,16 +91,16 @@ const Storage = {
 
     if (YouTubeBridge.inPlayablesEnv()) {
       return ytgame.game.saveData(payload).then(function () {
-        console.info('[Stop Zone · Storage] Saved to YouTube cloud.', self._data);
+        console.info('[Strike Master · Storage] Saved to YouTube cloud.', self._data);
         return true;
       }).catch(function (error) {
-        console.warn('[Stop Zone · Storage] YouTube saveData failed.', error);
+        console.warn('[Strike Master · Storage] YouTube saveData failed.', error);
         return false;
       });
     }
 
     window.localStorage.setItem(this.LOCAL_KEY, payload);
-    console.info('[Stop Zone · Storage] Saved to localStorage (local testing).', this._data);
+    console.info('[Strike Master · Storage] Saved to localStorage (local testing).', this._data);
     return Promise.resolve(true);
   },
 

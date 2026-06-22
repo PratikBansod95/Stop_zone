@@ -340,10 +340,7 @@ class PlayScene extends Phaser.Scene {
   updateSportsHUD() {
     this.sportsHud.scoreValue.setText(String(this.score));
     this.sportsHud.bestValue.setText(String(Storage.getBestScore()));
-    this.sportsHud.streakValue.setText(String(this.score));
-    this.sportsHud.streakValue.setColor(
-      this.score >= 2 ? SportsConfig.colors.textGold : SportsConfig.colors.textWhite
-    );
+    this.sportsHud.globalAvgValue.setText(String(SportsConfig.globalAvgScore));
     this.sportsHud.updateProgress(
       Math.min(this.score, SportsConfig.progressDotCount),
       SportsConfig.progressDotCount
@@ -359,9 +356,6 @@ class PlayScene extends Phaser.Scene {
     FX.screenFlash(this, SportsConfig.colors.neonGreen, 160, 0.18);
     FX.hitParticles(this, this.ballMarker.container.x, this.ballMarker.container.y);
     SportsVisuals.animateScorePop(this, this.sportsHud.scoreValue);
-    if (this.score >= 2) {
-      SportsVisuals.animateScorePop(this, this.sportsHud.streakValue);
-    }
     this.updateSportsHUD();
   }
 

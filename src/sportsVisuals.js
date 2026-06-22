@@ -131,7 +131,7 @@ const SportsVisuals = {
   },
 
   // ===========================================================================
-  // 2. TOP HUD — glass panel, best / score / streak, progress dots
+  // 2. TOP HUD — glass panel, your best / score / global avg, progress dots
   // ===========================================================================
 
   createHUD(scene) {
@@ -140,19 +140,16 @@ const SportsVisuals = {
     const progressLines = scene.add.graphics();
     const progressContainer = scene.add.container(0, 0);
 
-    const trophy = this._createIcon(scene, 'trophy', 28, this.C.gold)
-      || scene.add.text(0, 0, '🏆', { fontSize: '28px' }).setOrigin(0.5);
+    const bestLabel = this._label(scene, 'YOUR BEST', 1);
+    const bestValue = this._value(scene, String(Storage.getBestScore()), this.C.textGold, 28);
 
-    const bestLabel = this._label(scene, 'GLOBAL BEST', 1);
-    const bestValue = this._value(scene, String(Storage.getBestScore()), this.C.textGold, 30);
-
-    const scoreLabel = this._label(scene, 'SCORE', 3);
-    const scoreValue = this._value(scene, '0', this.C.textCyan, 56);
+    const scoreLabel = this._label(scene, 'SCORE', 2);
+    const scoreValue = this._value(scene, '0', this.C.textCyan, 48);
     scoreValue.setColor(this.C.textCyan);
-    scoreValue.setShadow(0, 0, this.C.scoreGlow, 24, true, true);
+    scoreValue.setShadow(0, 0, this.C.scoreGlow, 20, true, true);
 
-    const streakLabel = this._label(scene, 'STREAK', 2);
-    const streakValue = this._value(scene, '0', this.C.textWhite, 32);
+    const globalAvgLabel = this._label(scene, 'GLOBAL AVG.', 0);
+    const globalAvgValue = this._value(scene, String(SportsConfig.globalAvgScore), this.C.textWhite, 28);
 
     const progressBalls = [];
     progressContainer.add(progressLines);
@@ -165,9 +162,9 @@ const SportsVisuals = {
 
     container.add([
       panelGfx,
-      trophy, bestLabel, bestValue,
+      bestLabel, bestValue,
       scoreLabel, scoreValue,
-      streakLabel, streakValue,
+      globalAvgLabel, globalAvgValue,
       progressContainer,
     ]);
 
@@ -181,7 +178,7 @@ const SportsVisuals = {
       progressBalls: progressBalls,
       scoreValue: scoreValue,
       bestValue: bestValue,
-      streakValue: streakValue,
+      globalAvgValue: globalAvgValue,
       _introDone: false,
 
       playIntro: function (sceneRef) {
@@ -215,31 +212,30 @@ const SportsVisuals = {
           panelGfx, cx, topY, w, statsH, this._progressH, SportsVisuals.C.neonBlue, sh, sw
         );
 
-        MobileLayout.refreshIcon(trophy, 28, sh, sw);
-        bestLabel.setText(SportsVisuals._globalBestLabelText(sw));
-        MobileLayout.refreshFont(bestLabel, sw < 360 ? 9 : 11, sh, sw);
-        MobileLayout.refreshFont(bestValue, 30, sh, sw);
-        MobileLayout.refreshFont(scoreLabel, 12, sh, sw);
-        MobileLayout.refreshFont(scoreValue, 56, sh, sw);
-        MobileLayout.refreshFont(streakLabel, 12, sh, sw);
-        MobileLayout.refreshFont(streakValue, 32, sh, sw);
+        const fonts = SportsVisuals._hudFontSizes(sh, sw);
+        const colLeft = cx - w * 0.28;
+        const colCenter = cx;
+        const colRight = cx + w * 0.28;
+        const labelY = topY + statsH * 0.28;
+        const valueY = topY + statsH * 0.64;
 
-        const leftX = cx - w / 2 + w * 0.17;
-        const centerX = cx;
-        const rightX = cx + w / 2 - w * 0.17;
-        const midY = topY + statsH * 0.5;
+        bestLabel.setText(SportsVisuals._yourBestLabelText(sw));
+        globalAvgLabel.setText(SportsVisuals._globalAvgLabelText(sw));
+        MobileLayout.refreshFont(bestLabel, fonts.label, sh, sw);
+        MobileLayout.refreshFont(bestValue, fonts.sideValue, sh, sw);
+        MobileLayout.refreshFont(scoreLabel, fonts.label, sh, sw);
+        MobileLayout.refreshFont(scoreValue, fonts.scoreValue, sh, sw);
+        MobileLayout.refreshFont(globalAvgLabel, fonts.label, sh, sw);
+        MobileLayout.refreshFont(globalAvgValue, fonts.sideValue, sh, sw);
 
-        trophy.setPosition(leftX - MobileLayout.s(22, sh, sw), midY);
-        bestLabel.setPosition(leftX + MobileLayout.s(10, sh, sw), topY + statsH * 0.3);
-        bestLabel.setOrigin(0, 0.5);
-        bestValue.setPosition(leftX + MobileLayout.s(10, sh, sw), topY + statsH * 0.62);
-        bestValue.setOrigin(0, 0.5);
+        bestLabel.setPosition(colLeft, labelY).setOrigin(0.5, 0.5);
+        bestValue.setPosition(colLeft, valueY).setOrigin(0.5, 0.5);
 
-        scoreLabel.setPosition(centerX, topY + statsH * 0.2);
-        scoreValue.setPosition(centerX, topY + statsH * 0.58);
+        scoreLabel.setPosition(colCenter, labelY).setOrigin(0.5, 0.5);
+        scoreValue.setPosition(colCenter, valueY).setOrigin(0.5, 0.5);
 
-        streakLabel.setPosition(rightX, topY + statsH * 0.3);
-        streakValue.setPosition(rightX, topY + statsH * 0.62);
+        globalAvgLabel.setPosition(colRight, labelY).setOrigin(0.5, 0.5);
+        globalAvgValue.setPosition(colRight, valueY).setOrigin(0.5, 0.5);
       },
 
       updateProgress: function (completed, total) {
@@ -713,8 +709,21 @@ const SportsVisuals = {
     }
   },
 
-  _globalBestLabelText(screenWidth) {
-    return screenWidth < 360 ? 'G.BEST' : 'GLOBAL BEST';
+  _hudFontSizes(sceneHeight, screenWidth) {
+    const narrow = screenWidth < 380;
+    return {
+      label: narrow ? 9 : 10,
+      sideValue: narrow ? 24 : 28,
+      scoreValue: narrow ? 42 : 48,
+    };
+  },
+
+  _yourBestLabelText(screenWidth) {
+    return screenWidth < 380 ? 'Y.BEST' : 'YOUR BEST';
+  },
+
+  _globalAvgLabelText(screenWidth) {
+    return screenWidth < 380 ? 'G.AVG.' : 'GLOBAL AVG.';
   },
 
   _label(scene, text, letterSpacing) {

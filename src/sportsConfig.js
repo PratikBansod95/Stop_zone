@@ -59,6 +59,9 @@ const SportsConfig = {
     zoneGlow: '#39ff14',
   },
 
+  /** Placeholder global average shown in play HUD (no fetch API on YouTube Playables). */
+  globalAvgScore: 32,
+
   /** Visual tuning — glow intensity & spacing (safe to tweak). */
   visual: {
     hudPanelHeight: 92,

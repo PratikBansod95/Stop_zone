@@ -134,6 +134,7 @@ class GameOverScene extends Phaser.Scene {
       this.accuracyValue,
       this.statsLine,
       this.message,
+      this.challengeText,
       this.playAgainButton,
       this.menuButton,
     ]);

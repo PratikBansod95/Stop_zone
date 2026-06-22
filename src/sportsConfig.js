@@ -78,7 +78,8 @@ const SportsConfig = {
   /**
    * Icon attribution (free stock sources):
    * - Kenney.nl Game Icons (CC0): trophy, speed
-   * - game-icons.net (CC BY 3.0): ball — https://game-icons.net
+   * - game-icons.net (CC BY 3.0): ball fallback — https://game-icons.net
+   * - User-provided Adidas Brazuca photo (assets/icons/ball.png)
    */
   preloadIcons: function (loader) {
     const icons = this.icons;

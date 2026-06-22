@@ -445,21 +445,30 @@ const SportsVisuals = {
   createBallMarker(scene, diameter) {
     const container = scene.add.container(0, 0);
     const trailGfx = scene.add.graphics();
-    const redGlow = scene.add.circle(0, 0, diameter * 0.85, SportsVisuals.C.redGlow, 0.42);
+    const glowContainer = scene.add.container(0, 0);
+
+    const outerGlow = scene.add.circle(0, 0, diameter * 1.35, SportsVisuals.C.neonBlue, 0.1);
+    const midGlow = scene.add.circle(0, 0, diameter * 1.05, SportsVisuals.C.cyan, 0.2);
+    const innerGlow = scene.add.circle(0, 0, diameter * 0.78, SportsVisuals.C.neonGreen, 0.16);
+    glowContainer.add([outerGlow, midGlow, innerGlow]);
+
     const ball = this._createIcon(scene, 'ball', diameter)
       || scene.add.text(0, 0, '⚽', { fontSize: diameter + 'px' }).setOrigin(0.5);
     if (ball.setShadow) {
-      ball.setShadow(0, 0, '#ff6666', 12, true, true);
+      ball.setShadow(0, 0, SportsConfig.colors.scoreGlow, 18, true, true);
     }
 
-    container.add([trailGfx, redGlow, ball]);
+    container.add([trailGfx, glowContainer, ball]);
     container.trailHistory = [];
+
+    const glowLayers = [outerGlow, midGlow, innerGlow];
 
     return {
       container: container,
       ball: ball,
       trailGfx: trailGfx,
-      redGlow: redGlow,
+      glowContainer: glowContainer,
+      glowLayers: glowLayers,
 
       updateTrail: function (x, y, direction) {
         const history = container.trailHistory;
@@ -472,12 +481,12 @@ const SportsVisuals = {
         const behind = -direction;
 
         history.forEach(function (pt, i) {
-          const alpha = 0.42 - i * 0.045;
+          const alpha = 0.34 - i * 0.038;
           const stretch = (i + 1) * 11;
           const yEnd = pt.y + behind * stretch;
           const width = Math.max(1.5, 3.5 - i * 0.35);
 
-          trailGfx.lineStyle(width, SportsVisuals.C.redGlow, Math.max(alpha, 0.05));
+          trailGfx.lineStyle(width, SportsVisuals.C.cyan, Math.max(alpha, 0.05));
           trailGfx.beginPath();
           trailGfx.moveTo(pt.x - 5, yEnd);
           trailGfx.lineTo(pt.x - 5, pt.y);
@@ -487,7 +496,7 @@ const SportsVisuals = {
           trailGfx.lineTo(pt.x + 5, pt.y);
           trailGfx.strokePath();
 
-          trailGfx.fillStyle(SportsVisuals.C.redGlow, Math.max(alpha * 0.35, 0));
+          trailGfx.fillStyle(SportsVisuals.C.neonBlue, Math.max(alpha * 0.3, 0));
           trailGfx.fillCircle(pt.x, pt.y + behind * (stretch * 0.45), diameter * 0.22 - i * 1.5);
         });
       },
@@ -497,12 +506,13 @@ const SportsVisuals = {
           this.pulseTween.stop();
         }
         this.pulseTween = sceneRef.tweens.add({
-          targets: redGlow,
-          scale: 1.15,
-          alpha: 0.5,
-          duration: 600,
+          targets: glowLayers,
+          scale: { from: 1, to: 1.18 },
+          alpha: { from: 0.12, to: 0.28 },
+          duration: 650,
           yoyo: true,
           repeat: -1,
+          ease: 'Sine.easeInOut',
         });
       },
 
@@ -511,7 +521,9 @@ const SportsVisuals = {
           this.pulseTween.stop();
           this.pulseTween = null;
         }
-        redGlow.setScale(1).setAlpha(0.35);
+        outerGlow.setScale(1).setAlpha(0.1);
+        midGlow.setScale(1).setAlpha(0.2);
+        innerGlow.setScale(1).setAlpha(0.16);
       },
 
       squashStretch: function (sceneRef) {
@@ -528,7 +540,9 @@ const SportsVisuals = {
         if (ball.setAlpha) {
           ball.setAlpha(0.7);
         }
-        redGlow.setFillStyle(SportsVisuals.C.redGlow, 0.6);
+        outerGlow.setFillStyle(SportsVisuals.C.redGlow, 0.22);
+        midGlow.setFillStyle(SportsVisuals.C.redGlow, 0.38);
+        innerGlow.setFillStyle(SportsVisuals.C.redGlow, 0.28);
       },
     };
   },
@@ -593,8 +607,8 @@ const SportsVisuals = {
           ball.clearTint();
           ball.setAlpha(1);
         } else {
-          ball.setTint(SportsVisuals.C.grey);
-          ball.setAlpha(0.45);
+          ball.clearTint();
+          ball.setAlpha(0.38);
         }
       } else {
         ball.setAlpha(done ? 1 : 0.4);

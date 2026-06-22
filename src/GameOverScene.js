@@ -92,6 +92,14 @@ class GameOverScene extends Phaser.Scene {
       align: 'center',
     })).setOrigin(0.5);
 
+    this.challengeText = this.add.text(0, 0, 'Challenge your friends to beat your score!', UI.textStyle({
+      fontSize: MobileLayout.fontSize(18, h, w),
+      fontStyle: 'bold',
+      color: C.textGold,
+      align: 'center',
+    })).setOrigin(0.5);
+    this.challengeText.setShadow(0, 0, C.zoneGlow, 8, true, true);
+
     this.playAgainButton = UI.createButton(this, 0, 0, 'Play Again', function () {
       this.restartGame();
     }.bind(this), {
@@ -186,6 +194,7 @@ class GameOverScene extends Phaser.Scene {
       this.accuracyValue,
       this.statsLine,
       this.message,
+      this.challengeText,
       this.playAgainButton,
       this.menuButton,
     ];
@@ -206,7 +215,7 @@ class GameOverScene extends Phaser.Scene {
 
   getMessage() {
     if (this.isNewBest) {
-      return 'New personal best!';
+      return 'New personal best — you\'re on the board!';
     }
     if (this.finalScore === 0) {
       return 'Keep practicing — you\'ve got this.';
@@ -272,12 +281,16 @@ class GameOverScene extends Phaser.Scene {
     this.statsLine.setWordWrapWidth(panelW * 0.86);
 
     MobileLayout.refreshFont(this.message, 20, height, width);
-    this.message.setPosition(centerX, panelY + panelH / 2 + MobileLayout.s(36, height, width));
+    this.message.setPosition(centerX, panelY + panelH / 2 + MobileLayout.s(28, height, width));
     this.message.setWordWrapWidth(panelW * 0.86);
+
+    MobileLayout.refreshFont(this.challengeText, 18, height, width);
+    this.challengeText.setPosition(centerX, panelY + panelH / 2 + MobileLayout.s(58, height, width));
+    this.challengeText.setWordWrapWidth(panelW * 0.88);
 
     const btnY1 = Math.min(
       height - safe.bottom - MobileLayout.s(120, height, width),
-      panelY + panelH / 2 + MobileLayout.s(88, height, width)
+      panelY + panelH / 2 + MobileLayout.s(100, height, width)
     );
     const btnY2 = btnY1 + MobileLayout.s(62, height, width);
 

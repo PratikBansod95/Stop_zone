@@ -213,14 +213,18 @@ const SportsVisuals = {
         );
 
         const fonts = SportsVisuals._hudFontSizes(sh, sw);
-        const colLeft = cx - w * 0.28;
-        const colCenter = cx;
-        const colRight = cx + w * 0.28;
-        const labelY = topY + statsH * 0.28;
-        const valueY = topY + statsH * 0.64;
+        const panelLeft = cx - w / 2;
+        const colLeft = panelLeft + w * 0.165;
+        const colCenter = panelLeft + w * 0.5;
+        const colRight = panelLeft + w * 0.835;
+        const thirdW = w / 3;
 
-        bestLabel.setText(SportsVisuals._yourBestLabelText(sw));
-        globalAvgLabel.setText(SportsVisuals._globalAvgLabelText(sw));
+        bestLabel.setText(SportsVisuals._yourBestLabelText(sw, thirdW));
+        globalAvgLabel.setText(SportsVisuals._globalAvgLabelText(sw, thirdW));
+        bestLabel.setAlign('center');
+        scoreLabel.setAlign('center');
+        globalAvgLabel.setAlign('center');
+
         MobileLayout.refreshFont(bestLabel, fonts.label, sh, sw);
         MobileLayout.refreshFont(bestValue, fonts.sideValue, sh, sw);
         MobileLayout.refreshFont(scoreLabel, fonts.label, sh, sw);
@@ -228,14 +232,9 @@ const SportsVisuals = {
         MobileLayout.refreshFont(globalAvgLabel, fonts.label, sh, sw);
         MobileLayout.refreshFont(globalAvgValue, fonts.sideValue, sh, sw);
 
-        bestLabel.setPosition(colLeft, labelY).setOrigin(0.5, 0.5);
-        bestValue.setPosition(colLeft, valueY).setOrigin(0.5, 0.5);
-
-        scoreLabel.setPosition(colCenter, labelY).setOrigin(0.5, 0.5);
-        scoreValue.setPosition(colCenter, valueY).setOrigin(0.5, 0.5);
-
-        globalAvgLabel.setPosition(colRight, labelY).setOrigin(0.5, 0.5);
-        globalAvgValue.setPosition(colRight, valueY).setOrigin(0.5, 0.5);
+        SportsVisuals._layoutHudStatColumn(bestLabel, bestValue, colLeft, topY, statsH, sh, sw);
+        SportsVisuals._layoutHudStatColumn(scoreLabel, scoreValue, colCenter, topY, statsH, sh, sw);
+        SportsVisuals._layoutHudStatColumn(globalAvgLabel, globalAvgValue, colRight, topY, statsH, sh, sw);
       },
 
       updateProgress: function (completed, total) {
@@ -284,17 +283,19 @@ const SportsVisuals = {
 
         const sh = scene.scale.height;
         const sw = scene.scale.width;
-        const innerPad = MobileLayout.s(12, sh, sw);
-        const iconSize = MobileLayout.s(16, sh, sw);
-        const gap = MobileLayout.s(8, sh, sw);
-        const minW = MobileLayout.s(136, sh, sw);
-        const h = MobileLayout.s(32, sh, sw);
+        const innerPad = MobileLayout.s(14, sh, sw);
+        const iconSize = MobileLayout.s(14, sh, sw);
+        const gap = MobileLayout.s(6, sh, sw);
+        const minW = MobileLayout.s(148, sh, sw);
+        const h = MobileLayout.s(34, sh, sw);
 
         container.setPosition(cx, y);
 
-        MobileLayout.refreshIcon(icon, 16, sh, sw);
-        MobileLayout.refreshFont(label, 10, sh, sw);
-        MobileLayout.refreshFont(value, 14, sh, sw);
+        label.setText(sw < 380 ? 'SPD' : 'SPEED');
+
+        MobileLayout.refreshIcon(icon, 14, sh, sw);
+        MobileLayout.refreshFont(label, sw < 380 ? 9 : 10, sh, sw);
+        MobileLayout.refreshFont(value, sw < 380 ? 12 : 13, sh, sw);
 
         const contentW = iconSize + gap + label.width + gap + value.width;
         const w = Math.max(minW, contentW + innerPad * 2);
@@ -710,20 +711,40 @@ const SportsVisuals = {
   },
 
   _hudFontSizes(sceneHeight, screenWidth) {
-    const narrow = screenWidth < 380;
+    const narrow = screenWidth < 400;
     return {
-      label: narrow ? 9 : 10,
-      sideValue: narrow ? 24 : 28,
-      scoreValue: narrow ? 42 : 48,
+      label: narrow ? 8 : 9,
+      sideValue: narrow ? 22 : 26,
+      scoreValue: narrow ? 36 : 42,
     };
   },
 
-  _yourBestLabelText(screenWidth) {
-    return screenWidth < 380 ? 'Y.BEST' : 'YOUR BEST';
+  _layoutHudStatColumn(label, value, colX, statsTop, statsH, sceneHeight, screenWidth) {
+    const gap = MobileLayout.s(5, sceneHeight, screenWidth);
+    const labelH = label.height;
+    const valueH = value.height;
+    const blockH = labelH + gap + valueH;
+    const blockTop = statsTop + Math.max(MobileLayout.s(8, sceneHeight, screenWidth), (statsH - blockH) / 2);
+
+    label.setPosition(colX, blockTop + labelH / 2).setOrigin(0.5, 0.5);
+    value.setPosition(colX, blockTop + labelH + gap + valueH / 2).setOrigin(0.5, 0.5);
   },
 
-  _globalAvgLabelText(screenWidth) {
-    return screenWidth < 380 ? 'G.AVG.' : 'GLOBAL AVG.';
+  _yourBestLabelText(screenWidth, thirdWidth) {
+    if (screenWidth < 400 || thirdWidth < 100) {
+      return 'Y.BEST';
+    }
+    return 'YOUR BEST';
+  },
+
+  _globalAvgLabelText(screenWidth, thirdWidth) {
+    if (screenWidth < 400 || thirdWidth < 100) {
+      return 'G.AVG';
+    }
+    if (thirdWidth < 118) {
+      return 'GLOBAL\nAVG';
+    }
+    return 'GLOBAL AVG';
   },
 
   _label(scene, text, letterSpacing) {
@@ -778,12 +799,12 @@ const SportsVisuals = {
 
     gfx.lineStyle(1, borderColor, 0.25);
     gfx.beginPath();
-    gfx.moveTo(x + w * 0.33, topY + 10);
-    gfx.lineTo(x + w * 0.33, topY + statsH - 10);
+    gfx.moveTo(x + w * 0.33, topY + MobileLayout.s(8, sceneHeight, sceneWidth));
+    gfx.lineTo(x + w * 0.33, topY + statsH - MobileLayout.s(8, sceneHeight, sceneWidth));
     gfx.strokePath();
     gfx.beginPath();
-    gfx.moveTo(x + w * 0.67, topY + 10);
-    gfx.lineTo(x + w * 0.67, topY + statsH - 10);
+    gfx.moveTo(x + w * 0.67, topY + MobileLayout.s(8, sceneHeight, sceneWidth));
+    gfx.lineTo(x + w * 0.67, topY + statsH - MobileLayout.s(8, sceneHeight, sceneWidth));
     gfx.strokePath();
 
     gfx.lineStyle(1, borderColor, 0.35);

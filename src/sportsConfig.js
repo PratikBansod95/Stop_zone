@@ -64,7 +64,7 @@ const SportsConfig = {
 
   /** Visual tuning — glow intensity & spacing (safe to tweak). */
   visual: {
-    hudPanelHeight: 92,
+    hudPanelHeight: 98,
     hudProgressHeight: 28,
     progressGap: 8,
     speedAboveTrack: 16,

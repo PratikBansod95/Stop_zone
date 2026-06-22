@@ -32,12 +32,6 @@ class MenuScene extends Phaser.Scene {
       align: 'center',
     })).setOrigin(0.5);
 
-    this.bestText = this.add.text(0, 0, 'Global Best · ' + Storage.getBestScore(), UI.textStyle({
-      fontSize: MobileLayout.fontSize(22, h),
-      color: SportsConfig.colors.textGold,
-      fontStyle: 'bold',
-    })).setOrigin(0.5);
-
     this.playButton = UI.createButton(this, 0, 0, 'Play', function () {
       this.startGame();
     }.bind(this), {
@@ -176,17 +170,13 @@ class MenuScene extends Phaser.Scene {
     this.title.setPosition(0, MobileLayout.s(24, height, width));
     this.title.setFontSize(MobileLayout.fitTitleSize(68, SportsConfig.gameName, width * 0.9, height, width));
 
-    const titleBlockBottom = titleY + MobileLayout.s(130, height, width);
-    const playY = Math.max(height * 0.48, titleBlockBottom + MobileLayout.s(28, height, width));
+    const titleBlockBottom = titleY + MobileLayout.s(100, height, width);
+    const playY = Math.max(height * 0.46, titleBlockBottom + MobileLayout.s(32, height, width));
     const helpY = Math.min(playY + MobileLayout.s(72, height, width), height - safe.bottom - MobileLayout.s(100, height, width));
 
     MobileLayout.refreshFont(this.subtitle, 24, height, width);
     this.subtitle.setPosition(centerX, titleY + MobileLayout.s(78, height, width));
     this.subtitle.setWordWrapWidth(width * 0.88);
-
-    MobileLayout.refreshFont(this.bestText, 22, height, width);
-    this.bestText.setText('Global Best · ' + Storage.getBestScore());
-    this.bestText.setPosition(centerX, titleY + MobileLayout.s(114, height, width));
 
     this.playButton.layout(centerX, playY, {
       width: Math.min(width * 0.82, MobileLayout.s(340, height, width)),

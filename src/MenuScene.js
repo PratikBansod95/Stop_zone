@@ -137,26 +137,30 @@ class MenuScene extends Phaser.Scene {
   layoutHelpPanel() {
     const h = this.scale.height;
     const w = this.scale.width;
-    const panelW = Math.min(w * 0.9, MobileLayout.s(540, h));
-    const panelH = MobileLayout.s(480, h);
-    const pad = MobileLayout.s(28, h);
-    const btnH = MobileLayout.touchTarget(h);
+    const panelW = Math.min(w * 0.9, MobileLayout.s(540, h, w));
+    const panelH = Math.min(MobileLayout.s(480, h, w), h * 0.72);
+    const pad = MobileLayout.s(28, h, w);
+    const btnH = MobileLayout.touchTarget(h, w);
     const top = -panelH / 2;
 
     this.helpPanelBg.setSize(panelW, panelH);
 
     this.helpTitle.setPosition(0, top + pad);
-    this.helpTitle.setFontSize(MobileLayout.fontSize(32, h));
+    this.helpTitle.setFontSize(MobileLayout.fontSize(32, h, w));
 
-    const bodyTop = top + pad + MobileLayout.s(52, h);
+    const bodyTop = top + pad + MobileLayout.s(52, h, w);
     this.helpBody.setPosition(0, bodyTop);
-    this.helpBody.setFontSize(MobileLayout.fontSize(20, h));
+    this.helpBody.setFontSize(MobileLayout.fontSize(20, h, w));
     this.helpBody.setWordWrapWidth(panelW - pad * 2);
 
     const bodyBottom = bodyTop + this.helpBody.height;
-    const buttonY = Math.max(bodyBottom + MobileLayout.s(24, h), top + panelH - pad - btnH / 2);
+    const buttonY = Math.max(bodyBottom + MobileLayout.s(24, h, w), top + panelH - pad - btnH / 2);
 
-    this.helpCloseButton.setPosition(0, buttonY);
+    this.helpCloseButton.layout(0, buttonY, {
+      width: MobileLayout.s(260, h, w),
+      height: btnH,
+      fontSize: 24,
+    });
   }
 
   layout() {
@@ -169,14 +173,33 @@ class MenuScene extends Phaser.Scene {
 
     const titleY = safe.top + height * 0.15;
     this.titleGroup.setPosition(centerX, titleY);
-    this.titleBall.setPosition(0, -MobileLayout.s(58, height));
-    this.title.setPosition(0, MobileLayout.s(24, height));
-    this.title.setFontSize(MobileLayout.fontSize(68, height));
+    MobileLayout.refreshIcon(this.titleBall, 80, height, width);
+    this.titleBall.setPosition(0, -MobileLayout.s(58, height, width));
+    this.title.setPosition(0, MobileLayout.s(24, height, width));
+    this.title.setFontSize(MobileLayout.fitTitleSize(68, SportsConfig.gameName, width * 0.9, height, width));
 
-    this.subtitle.setPosition(centerX, titleY + MobileLayout.s(78, height));
-    this.bestText.setPosition(centerX, titleY + MobileLayout.s(114, height));
-    this.playButton.setPosition(centerX, height * 0.48);
-    this.helpButton.setPosition(centerX, height * 0.60);
+    const titleBlockBottom = titleY + MobileLayout.s(130, height, width);
+    const playY = Math.max(height * 0.48, titleBlockBottom + MobileLayout.s(28, height, width));
+    const helpY = Math.min(playY + MobileLayout.s(72, height, width), height - safe.bottom - MobileLayout.s(100, height, width));
+
+    MobileLayout.refreshFont(this.subtitle, 24, height, width);
+    this.subtitle.setPosition(centerX, titleY + MobileLayout.s(78, height, width));
+    this.subtitle.setWordWrapWidth(width * 0.88);
+
+    MobileLayout.refreshFont(this.bestText, 22, height, width);
+    this.bestText.setPosition(centerX, titleY + MobileLayout.s(114, height, width));
+
+    this.playButton.layout(centerX, playY, {
+      width: Math.min(width * 0.82, MobileLayout.s(340, height, width)),
+      height: MobileLayout.touchTarget(height, width) + MobileLayout.s(10, height, width),
+      fontSize: 32,
+    });
+    this.helpButton.layout(centerX, helpY, {
+      width: Math.min(width * 0.68, MobileLayout.s(280, height, width)),
+      height: MobileLayout.touchTarget(height, width),
+      fontSize: 24,
+    });
+
     UI.layoutMuteButton(this.muteButton, safe, width, height, 'bottom-left');
 
     this.helpOverlay.getAt(0).setSize(width, height);

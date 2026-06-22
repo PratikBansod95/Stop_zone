@@ -226,8 +226,8 @@ class GameOverScene extends Phaser.Scene {
     const centerX = width / 2;
     const safe = MobileLayout.safeInsets(width, height);
     const panelW = width * 0.92;
-    const panelH = MobileLayout.s(300, height, width);
-    const panelY = safe.top + height * 0.38;
+    const panelH = Math.min(MobileLayout.s(300, height, width), height * 0.42);
+    const panelY = safe.top + height * 0.36;
 
     this.stadiumBg.resize(width, height);
     this.resultsPanel.draw(centerX, panelY, panelW, panelH);
@@ -240,16 +240,19 @@ class GameOverScene extends Phaser.Scene {
     const row5 = panelY + MobileLayout.s(118, height, width);
 
     this.title.setPosition(centerX, safe.top + MobileLayout.s(36, height, width));
-    this.title.setFontSize(MobileLayout.fontSize(44, height, width));
+    MobileLayout.refreshFont(this.title, 44, height, width);
 
+    MobileLayout.refreshFont(this.scoreLabel, 14, height, width);
     this.scoreLabel.setPosition(centerX - colOffset, row1);
     this.scoreValue.setPosition(centerX - colOffset, row2);
-    this.scoreValue.setFontSize(MobileLayout.fontSize(64, height, width));
+    MobileLayout.refreshFont(this.scoreValue, 64, height, width);
 
+    MobileLayout.refreshFont(this.bestLabel, 14, height, width);
     this.bestLabel.setPosition(centerX + colOffset, row1);
     this.bestValue.setPosition(centerX + colOffset, row2);
-    this.bestValue.setFontSize(MobileLayout.fontSize(36, height, width));
+    MobileLayout.refreshFont(this.bestValue, 36, height, width);
 
+    MobileLayout.refreshFont(this.newBestBadge, 16, height, width);
     this.newBestBadge.setPosition(centerX, row3);
 
     this.dividerGfx.clear();
@@ -259,16 +262,35 @@ class GameOverScene extends Phaser.Scene {
     this.dividerGfx.lineTo(centerX + panelW * 0.38, row3 + MobileLayout.s(14, height, width));
     this.dividerGfx.strokePath();
 
+    MobileLayout.refreshFont(this.accuracyLabel, 13, height, width);
+    MobileLayout.refreshFont(this.accuracyValue, 28, height, width);
     this.accuracyLabel.setPosition(centerX - MobileLayout.s(52, height, width), row4);
     this.accuracyValue.setPosition(centerX + MobileLayout.s(42, height, width), row4);
+
+    MobileLayout.refreshFont(this.statsLine, 17, height, width);
     this.statsLine.setPosition(centerX, row5);
+    this.statsLine.setWordWrapWidth(panelW * 0.86);
 
+    MobileLayout.refreshFont(this.message, 20, height, width);
     this.message.setPosition(centerX, panelY + panelH / 2 + MobileLayout.s(36, height, width));
+    this.message.setWordWrapWidth(panelW * 0.86);
 
-    const btnY1 = Math.min(height - safe.bottom - MobileLayout.s(120, height, width), panelY + panelH / 2 + MobileLayout.s(88, height, width));
+    const btnY1 = Math.min(
+      height - safe.bottom - MobileLayout.s(120, height, width),
+      panelY + panelH / 2 + MobileLayout.s(88, height, width)
+    );
     const btnY2 = btnY1 + MobileLayout.s(62, height, width);
-    this.playAgainButton.setPosition(centerX, btnY1);
-    this.menuButton.setPosition(centerX, btnY2);
+
+    this.playAgainButton.layout(centerX, btnY1, {
+      width: Math.min(width * 0.82, MobileLayout.s(340, height, width)),
+      height: MobileLayout.touchTarget(height, width) + MobileLayout.s(10, height, width),
+      fontSize: 28,
+    });
+    this.menuButton.layout(centerX, btnY2, {
+      width: Math.min(width * 0.62, MobileLayout.s(260, height, width)),
+      height: MobileLayout.touchTarget(height, width),
+      fontSize: 22,
+    });
 
     UI.layoutMuteButton(this.muteButton, safe, width, height, 'bottom-left');
   }

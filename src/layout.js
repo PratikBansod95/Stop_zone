@@ -59,6 +59,42 @@ const MobileLayout = {
     return Math.max(size, 12) + 'px';
   },
 
+  /** Re-apply scaled font size on resize (pass design-pixel base size). */
+  refreshFont(textObj, basePx, height, width) {
+    if (textObj && textObj.setFontSize) {
+      textObj.setFontSize(this.fontSize(basePx, height, width));
+    }
+  },
+
+  /** Re-apply scaled icon/sprite dimensions on resize. */
+  refreshIcon(img, designPx, height, width) {
+    const size = this.s(designPx, height, width);
+    if (img && img.setDisplaySize) {
+      img.setDisplaySize(size, size);
+    }
+    return size;
+  },
+
+  /**
+   * Scale a long title so it fits narrow or landscape screens.
+   */
+  fitTitleSize(basePx, titleText, maxWidth, height, width) {
+    let size = Math.round(basePx * this.factor(width, height));
+    const portrait = this.isPortrait(width, height);
+    if (!portrait) {
+      size = Math.round(size * 0.82);
+    }
+    const chars = (titleText || '').length;
+    if (chars > 12) {
+      size = Math.round(size * 0.9);
+    }
+    const estimated = chars * size * 0.52;
+    if (estimated > maxWidth * 0.92) {
+      size = Math.max(12, Math.floor((maxWidth * 0.92) / (chars * 0.52)));
+    }
+    return Math.max(size, 12) + 'px';
+  },
+
   /**
    * Safe margins for notches, home bars, and YouTube iframe chrome.
    * Uses visualViewport when available (mobile browser UI show/hide).

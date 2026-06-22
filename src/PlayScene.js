@@ -235,7 +235,7 @@ class PlayScene extends Phaser.Scene {
     this.sportsHud = SportsVisuals.createHUD(this);
     this.speedBadge = SportsVisuals.createSpeedBadge(this);
     this.sportsTrack = SportsVisuals.createTrack(this);
-    this.ballMarker = SportsVisuals.createBallMarker(this, MobileLayout.s(46, h));
+    this.ballMarker = SportsVisuals.createBallMarker(this, MobileLayout.s(46, h, this.scale.width));
 
     this.playGroup.add([
       this.sportsTrack.laneContainer,
@@ -290,6 +290,10 @@ class PlayScene extends Phaser.Scene {
     this.speedBadge.layout(centerX, speedY);
 
     UI.layoutMuteButton(this.muteButton, safe, width, height, 'bottom-left');
+
+    if (this.ballMarker && this.ballMarker.resize) {
+      this.ballMarker.resize(MobileLayout.s(46, height, width));
+    }
 
     this.refreshTrackVisuals();
     this.syncIndicatorPosition();

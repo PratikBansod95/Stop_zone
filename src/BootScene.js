@@ -67,9 +67,10 @@ class BootScene extends Phaser.Scene {
     this.stadiumBg.resize(width, height);
 
     this.titleGroup.setPosition(centerX, centerY - MobileLayout.s(80, height, width));
+    MobileLayout.refreshIcon(this.titleBall, 64, height, width);
     this.titleBall.setPosition(0, -MobileLayout.s(48, height, width));
     this.title.setPosition(0, MobileLayout.s(18, height, width));
-    this.title.setFontSize(MobileLayout.fontSize(58, height, width));
+    this.title.setFontSize(MobileLayout.fitTitleSize(58, SportsConfig.gameName, width * 0.9, height, width));
 
     this.statusText.setPosition(centerX, centerY + MobileLayout.s(10, height, width));
     this.statusText.setFontSize(MobileLayout.fontSize(24, height, width));

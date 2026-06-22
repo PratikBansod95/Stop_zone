@@ -57,7 +57,47 @@ const UI = {
     }
 
     container.hitTarget = bg;
+    container.bg = bg;
+    container.labelText = text;
+    container.buttonOptions = {
+      width: width,
+      height: btnHeight,
+      fontSize: options.fontSize || MobileLayout.fontSize(30, height),
+      color: fillColor,
+      hoverColor: hoverColor,
+      strokeColor: strokeColor,
+      fillAlpha: options.fillAlpha !== undefined ? options.fillAlpha : 1,
+    };
+    container.layout = function (x, y, layoutOptions) {
+      UI.layoutButton(container, x, y, layoutOptions);
+    };
     return container;
+  },
+
+  layoutButton(container, x, y, layoutOptions) {
+    layoutOptions = layoutOptions || {};
+    const scene = container.scene;
+    const height = scene.scale.height;
+    const width = scene.scale.width;
+    const opts = Object.assign({}, container.buttonOptions, layoutOptions);
+    const btnW = opts.width !== undefined
+      ? opts.width
+      : Math.min(width * 0.72, MobileLayout.s(320, height, width));
+    const btnH = opts.height || MobileLayout.touchTarget(height, width);
+    const fillColor = opts.color;
+    const strokeColor = opts.strokeColor || SportsConfig.colors.neonBlue;
+
+    container.setPosition(x, y);
+    container.bg.setSize(btnW, btnH);
+    container.bg.setFillStyle(fillColor, opts.fillAlpha !== undefined ? opts.fillAlpha : 1);
+    container.bg.setStrokeStyle(2, strokeColor, 0.75);
+    container.setSize(btnW, btnH);
+
+    if (typeof opts.fontSize === 'string') {
+      container.labelText.setFontSize(opts.fontSize);
+    } else if (typeof opts.fontSize === 'number') {
+      MobileLayout.refreshFont(container.labelText, opts.fontSize, height, width);
+    }
   },
 
   createTapPrompt(scene, label) {
@@ -131,6 +171,7 @@ const UI = {
 
     container.add([bg, icon]);
     container.setSize(size, size);
+    container.bg = bg;
 
     const refresh = function () {
       icon.setText(SoundManager.isMuted() ? '🔇' : '🔊');
@@ -150,14 +191,18 @@ const UI = {
   /** Place mute control in a corner away from the HUD scoreboard. */
   layoutMuteButton(container, safe, width, height, corner) {
     corner = corner || 'bottom-left';
-    const size = MobileLayout.touchTarget(height) * 0.78;
-    const pad = MobileLayout.s(14, height);
+    const size = MobileLayout.touchTarget(height, width) * 0.78;
+    const pad = MobileLayout.s(14, height, width);
 
     if (corner === 'bottom-left') {
       container.setPosition(safe.side + pad + size / 2, height - safe.bottom - pad - size / 2);
     } else {
       container.setPosition(width - safe.side - pad - size / 2, height - safe.bottom - pad - size / 2);
     }
+
+    container.bg.setRadius(size / 2);
+    container.setSize(size, size);
+    MobileLayout.refreshFont(container.list[1], 22, height, width);
   },
 
   get scale() {

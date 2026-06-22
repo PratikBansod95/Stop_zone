@@ -135,15 +135,13 @@ const SportsVisuals = {
   // ===========================================================================
 
   createHUD(scene) {
-    const h = scene.scale.height;
     const container = scene.add.container(0, 0).setDepth(50);
     const panelGfx = scene.add.graphics();
     const progressLines = scene.add.graphics();
     const progressContainer = scene.add.container(0, 0);
 
-    const trophySize = MobileLayout.s(28, h);
-    const trophy = this._createIcon(scene, 'trophy', trophySize, this.C.gold)
-      || scene.add.text(0, 0, '🏆', { fontSize: trophySize + 'px' }).setOrigin(0.5);
+    const trophy = this._createIcon(scene, 'trophy', 28, this.C.gold)
+      || scene.add.text(0, 0, '🏆', { fontSize: '28px' }).setOrigin(0.5);
 
     const bestLabel = this._label(scene, 'BEST', 2);
     const bestValue = this._value(scene, String(Storage.getBestScore()), this.C.textGold, 30);
@@ -159,9 +157,8 @@ const SportsVisuals = {
     const progressBalls = [];
     progressContainer.add(progressLines);
     for (let i = 0; i < SportsConfig.progressDotCount; i++) {
-      const ballSize = MobileLayout.s(15, h);
-      const ballIcon = this._createIcon(scene, 'ball', ballSize)
-        || scene.add.text(0, 0, '⚽', { fontSize: ballSize + 'px' }).setOrigin(0.5);
+      const ballIcon = this._createIcon(scene, 'ball', 15)
+        || scene.add.text(0, 0, '⚽', { fontSize: '15px' }).setOrigin(0.5);
       progressBalls.push(ballIcon);
       progressContainer.add(ballIcon);
     }
@@ -205,25 +202,36 @@ const SportsVisuals = {
       },
 
       layout: function (cx, topY, w, statsH) {
+        const sh = scene.scale.height;
+        const sw = scene.scale.width;
+
         this._panelW = w;
         this._statsH = statsH;
-        this._progressH = MobileLayout.s(SportsConfig.visual.hudProgressHeight, scene.scale.height);
+        this._progressH = MobileLayout.s(SportsConfig.visual.hudProgressHeight, sh, sw);
         this._panelCx = cx;
         this._panelTop = topY;
 
         SportsVisuals._drawScoreboardPanel(
-          panelGfx, cx, topY, w, statsH, this._progressH, SportsVisuals.C.neonBlue
+          panelGfx, cx, topY, w, statsH, this._progressH, SportsVisuals.C.neonBlue, sh, sw
         );
+
+        MobileLayout.refreshIcon(trophy, 28, sh, sw);
+        MobileLayout.refreshFont(bestLabel, 12, sh, sw);
+        MobileLayout.refreshFont(bestValue, 30, sh, sw);
+        MobileLayout.refreshFont(scoreLabel, 12, sh, sw);
+        MobileLayout.refreshFont(scoreValue, 56, sh, sw);
+        MobileLayout.refreshFont(streakLabel, 12, sh, sw);
+        MobileLayout.refreshFont(streakValue, 32, sh, sw);
 
         const leftX = cx - w / 2 + w * 0.17;
         const centerX = cx;
         const rightX = cx + w / 2 - w * 0.17;
         const midY = topY + statsH * 0.5;
 
-        trophy.setPosition(leftX - MobileLayout.s(22, h), midY);
-        bestLabel.setPosition(leftX + MobileLayout.s(10, h), topY + statsH * 0.3);
+        trophy.setPosition(leftX - MobileLayout.s(22, sh, sw), midY);
+        bestLabel.setPosition(leftX + MobileLayout.s(10, sh, sw), topY + statsH * 0.3);
         bestLabel.setOrigin(0, 0.5);
-        bestValue.setPosition(leftX + MobileLayout.s(10, h), topY + statsH * 0.62);
+        bestValue.setPosition(leftX + MobileLayout.s(10, sh, sw), topY + statsH * 0.62);
         bestValue.setOrigin(0, 0.5);
 
         scoreLabel.setPosition(centerX, topY + statsH * 0.2);
@@ -243,7 +251,8 @@ const SportsVisuals = {
           this._panelW * 0.88,
           completed,
           total,
-          scene.scale.height
+          scene.scale.height,
+          scene.scale.width
         );
       },
     };
@@ -256,9 +265,8 @@ const SportsVisuals = {
   createSpeedBadge(scene) {
     const container = scene.add.container(0, 0).setDepth(55);
     const bg = scene.add.graphics();
-    const iconSize = MobileLayout.s(16, scene.scale.height);
-    const icon = this._createIcon(scene, 'speed', iconSize, this.C.cyan)
-      || scene.add.text(0, 0, '⏱', { fontSize: iconSize + 'px' }).setOrigin(0.5);
+    const icon = this._createIcon(scene, 'speed', 16, this.C.cyan)
+      || scene.add.text(0, 0, '⏱', { fontSize: '16px' }).setOrigin(0.5);
     const label = scene.add.text(0, 0, 'SPEED', this._labelStyle(scene, 11)).setOrigin(0, 0.5);
     const value = scene.add.text(0, 0, '1.00x', this._labelStyle(scene, 15)).setOrigin(0, 0.5);
     value.setColor(this.C.textCyan);
@@ -271,16 +279,25 @@ const SportsVisuals = {
       container: container,
       value: value,
       layout: function (cx, y) {
-        const w = MobileLayout.s(142, scene.scale.height);
-        const h = MobileLayout.s(30, scene.scale.height);
+        const sh = scene.scale.height;
+        const sw = scene.scale.width;
+        const w = MobileLayout.s(142, sh, sw);
+        const h = MobileLayout.s(30, sh, sw);
+        const pad = MobileLayout.s(16, sh, sw);
+
         container.setPosition(cx, y);
         bg.clear();
         bg.fillStyle(SportsVisuals.C.glass, 0.88);
         bg.fillRoundedRect(-w / 2, -h / 2, w, h, h / 2);
         SportsVisuals._strokeGlowRect(bg, -w / 2, -h / 2, w, h, h / 2, SportsVisuals.C.neonBlue, 0.95);
-        icon.setPosition(-w / 2 + 16, 0);
-        label.setPosition(-w / 2 + 32, 0);
-        value.setPosition(-w / 2 + 82, 0);
+
+        MobileLayout.refreshIcon(icon, 16, sh, sw);
+        MobileLayout.refreshFont(label, 11, sh, sw);
+        MobileLayout.refreshFont(value, 15, sh, sw);
+
+        icon.setPosition(-w / 2 + pad, 0);
+        label.setPosition(-w / 2 + pad + MobileLayout.s(16, sh, sw), 0);
+        value.setPosition(-w / 2 + MobileLayout.s(82, sh, sw), 0);
       },
       setMultiplier: function (mult) {
         value.setText(mult.toFixed(2) + 'x');
@@ -345,8 +362,10 @@ const SportsVisuals = {
         const drift = this.chevronDrift.offset;
         const innerW = w * SportsConfig.visual.trackInnerRatio;
         const railW = SportsConfig.visual.railCoreWidth;
-        const capR = Math.max(railW * 2, 10);
+        const capR = Math.max(railW * 2, MobileLayout.s(10, scene.scale.height, scene.scale.width));
         const bloom = SportsConfig.visual.laneGlowAlpha;
+        const padOuter = MobileLayout.s(18, scene.scale.height, scene.scale.width);
+        const padMid = MobileLayout.s(10, scene.scale.height, scene.scale.width);
 
         laneGlow.clear();
         laneFill.clear();
@@ -355,9 +374,9 @@ const SportsVisuals = {
         chevrons.clear();
 
         laneGlow.fillStyle(SportsVisuals.C.neonBlue, bloom * 0.65);
-        laneGlow.fillRoundedRect(x - innerW / 2 - 18, y - h / 2 - 6, innerW + 36, h + 12, capR + 6);
+        laneGlow.fillRoundedRect(x - innerW / 2 - padOuter, y - h / 2 - MobileLayout.s(6, scene.scale.height, scene.scale.width), innerW + padOuter * 2, h + MobileLayout.s(12, scene.scale.height, scene.scale.width), capR + MobileLayout.s(6, scene.scale.height, scene.scale.width));
         laneGlow.fillStyle(SportsVisuals.C.neonBlue, bloom);
-        laneGlow.fillRoundedRect(x - innerW / 2 - 10, y - h / 2 - 2, innerW + 20, h + 4, capR + 2);
+        laneGlow.fillRoundedRect(x - innerW / 2 - padMid, y - h / 2 - MobileLayout.s(2, scene.scale.height, scene.scale.width), innerW + padMid * 2, h + MobileLayout.s(4, scene.scale.height, scene.scale.width), capR + MobileLayout.s(2, scene.scale.height, scene.scale.width));
 
         laneFill.fillStyle(SportsVisuals.C.navyDark, 0.72);
         laneFill.fillRoundedRect(x - innerW / 2 + 2, y - h / 2 + capR, innerW - 4, h - capR * 2, capR - 2);
@@ -376,6 +395,16 @@ const SportsVisuals = {
         zoneHoney.clear();
         zoneGfx.clear();
         zoneLabel.setPosition(x, y);
+
+        const sh = scene.scale.height;
+        const sw = scene.scale.width;
+        const labelPx = Math.max(10, Math.round(12 * MobileLayout.factor(sw, sh)));
+        if (zh < MobileLayout.s(36, sh, sw)) {
+          zoneLabel.setVisible(false);
+        } else {
+          zoneLabel.setVisible(true);
+          zoneLabel.setFontSize(labelPx + 'px');
+        }
 
         const innerW = w * SportsConfig.visual.trackInnerRatio;
         const zw = innerW - 10;
@@ -461,12 +490,25 @@ const SportsVisuals = {
     container.add([trailGfx, glowGfx, ball, rimGfx]);
     container.trailHistory = [];
 
-    return {
+    const marker = {
       container: container,
       ball: ball,
       trailGfx: trailGfx,
       glowGfx: glowGfx,
       rimGfx: rimGfx,
+      _diameter: diameter,
+
+      resize: function (nextDiameter) {
+        this._diameter = nextDiameter;
+        const ballR = nextDiameter / 2;
+        if (ball.setDisplaySize) {
+          ball.setDisplaySize(nextDiameter, nextDiameter);
+        } else if (ball.setFontSize) {
+          ball.setFontSize(nextDiameter + 'px');
+        }
+        SportsVisuals._drawBallHalo(glowGfx, ballR);
+        SportsVisuals._drawBallRim(rimGfx, ballR);
+      },
 
       updateTrail: function (x, y, direction) {
         const history = container.trailHistory;
@@ -495,7 +537,7 @@ const SportsVisuals = {
           trailGfx.strokePath();
 
           trailGfx.fillStyle(SportsVisuals.C.neonBlue, Math.max(alpha * 0.3, 0));
-          trailGfx.fillCircle(0, behind * (stretch * 0.45), diameter * 0.22 - i * 1.5);
+          trailGfx.fillCircle(0, behind * (stretch * 0.45), marker._diameter * 0.22 - i * 1.5);
         });
       },
 
@@ -537,12 +579,15 @@ const SportsVisuals = {
         if (ball.setAlpha) {
           ball.setAlpha(0.7);
         }
+        const ballR = marker._diameter / 2;
         glowGfx.clear();
         rimGfx.clear();
         SportsVisuals._drawBallHalo(glowGfx, ballR, SportsVisuals.C.redGlow);
         SportsVisuals._drawBallRim(rimGfx, ballR, SportsVisuals.C.redGlow);
       },
     };
+
+    return marker;
   },
 
   // ===========================================================================
@@ -613,11 +658,11 @@ const SportsVisuals = {
     return img;
   },
 
-  _layoutProgressBalls(linesGfx, balls, cx, y, w, completed, total, sceneHeight) {
+  _layoutProgressBalls(linesGfx, balls, cx, y, w, completed, total, sceneHeight, sceneWidth) {
     linesGfx.clear();
     const spacing = w / (total - 1);
     const startX = cx - w / 2;
-    const ballSize = MobileLayout.s(15, sceneHeight || 844);
+    const ballSize = MobileLayout.s(15, sceneHeight || 844, sceneWidth);
 
     for (let i = 0; i < total; i++) {
       const x = startX + i * spacing;
@@ -655,24 +700,24 @@ const SportsVisuals = {
     return scene.add.text(0, 0, text, this._labelStyle(scene, 12, letterSpacing)).setOrigin(0.5);
   },
 
-  _value(scene, text, color, size) {
-    const t = scene.add.text(0, 0, text, {
-      fontFamily: 'Arial,sans-serif',
-      fontSize: MobileLayout.fontSize(size, scene.scale.height),
-      fontStyle: 'bold',
-      color: color,
-    }).setOrigin(0.5);
-    return t;
-  },
-
   _labelStyle(scene, size, letterSpacing) {
     return {
       fontFamily: 'Arial,sans-serif',
-      fontSize: MobileLayout.fontSize(size, scene.scale.height),
+      fontSize: MobileLayout.fontSize(size, scene.scale.height, scene.scale.width),
       color: SportsConfig.colors.textMuted,
       letterSpacing: letterSpacing || 2,
       fontStyle: 'bold',
     };
+  },
+
+  _value(scene, text, color, size) {
+    const t = scene.add.text(0, 0, text, {
+      fontFamily: 'Arial,sans-serif',
+      fontSize: MobileLayout.fontSize(size, scene.scale.height, scene.scale.width),
+      fontStyle: 'bold',
+      color: color,
+    }).setOrigin(0.5);
+    return t;
   },
 
   _drawNeonRail(gfx, x, y, w, h, capR) {
@@ -686,11 +731,11 @@ const SportsVisuals = {
     gfx.fillRoundedRect(x + 1, y + capR, Math.max(1, w - 2), h - capR * 2, capR - 1);
   },
 
-  _drawScoreboardPanel(gfx, cx, topY, w, statsH, progressH, borderColor) {
+  _drawScoreboardPanel(gfx, cx, topY, w, statsH, progressH, borderColor, sceneHeight, sceneWidth) {
     gfx.clear();
     const x = cx - w / 2;
     const totalH = statsH + progressH;
-    const r = 16;
+    const r = MobileLayout.s(16, sceneHeight, sceneWidth);
 
     gfx.fillStyle(SportsVisuals.C.glass, 0.88);
     gfx.fillRoundedRect(x, topY, w, totalH, r);

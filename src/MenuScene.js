@@ -81,11 +81,8 @@ class MenuScene extends Phaser.Scene {
 
   cleanup() {
     this.scale.off('resize', this.layout, this);
-    MobileInput.unbindSceneTap(this);
     if (!MobileLayout.isMobile()) {
       this.input.keyboard.off('keydown-ESC', this.onEscKey, this);
-      this.input.keyboard.off('keydown-SPACE', this.onStartKey, this);
-      this.input.keyboard.off('keydown-ENTER', this.onStartKey, this);
     }
   }
 
@@ -209,34 +206,14 @@ class MenuScene extends Phaser.Scene {
   }
 
   bindInput() {
-    const self = this;
-    const ignore = [this.playButton, this.helpButton, this.muteButton];
-
-    MobileInput.bindSceneTap(this, function () {
-      self.startGame();
-    }, {
-      when: function () {
-        return !self.modalOpen;
-      },
-      ignore: ignore,
-    });
-
     if (!MobileLayout.isMobile()) {
       this.input.keyboard.on('keydown-ESC', this.onEscKey, this);
-      this.input.keyboard.on('keydown-SPACE', this.onStartKey, this);
-      this.input.keyboard.on('keydown-ENTER', this.onStartKey, this);
     }
   }
 
   onEscKey() {
     if (this.modalOpen) {
       this.closeHelpModal();
-    }
-  }
-
-  onStartKey() {
-    if (!this.modalOpen) {
-      this.startGame();
     }
   }
 

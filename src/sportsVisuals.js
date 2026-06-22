@@ -131,7 +131,7 @@ const SportsVisuals = {
   },
 
   // ===========================================================================
-  // 2. TOP HUD — glass panel, best / score / round, progress dots
+  // 2. TOP HUD — glass panel, best / score / streak, progress dots
   // ===========================================================================
 
   createHUD(scene) {
@@ -153,8 +153,8 @@ const SportsVisuals = {
     scoreValue.setColor(this.C.textCyan);
     scoreValue.setShadow(0, 0, this.C.scoreGlow, 24, true, true);
 
-    const roundLabel = this._label(scene, 'ROUND', 2);
-    const roundValue = this._value(scene, '1', this.C.textWhite, 32);
+    const streakLabel = this._label(scene, 'STREAK', 2);
+    const streakValue = this._value(scene, '0', this.C.textWhite, 32);
 
     const progressBalls = [];
     progressContainer.add(progressLines);
@@ -170,7 +170,7 @@ const SportsVisuals = {
       panelGfx,
       trophy, bestLabel, bestValue,
       scoreLabel, scoreValue,
-      roundLabel, roundValue,
+      streakLabel, streakValue,
       progressContainer,
     ]);
 
@@ -184,7 +184,7 @@ const SportsVisuals = {
       progressBalls: progressBalls,
       scoreValue: scoreValue,
       bestValue: bestValue,
-      roundValue: roundValue,
+      streakValue: streakValue,
       _introDone: false,
 
       playIntro: function (sceneRef) {
@@ -229,8 +229,8 @@ const SportsVisuals = {
         scoreLabel.setPosition(centerX, topY + statsH * 0.2);
         scoreValue.setPosition(centerX, topY + statsH * 0.58);
 
-        roundLabel.setPosition(rightX, topY + statsH * 0.3);
-        roundValue.setPosition(rightX, topY + statsH * 0.62);
+        streakLabel.setPosition(rightX, topY + statsH * 0.3);
+        streakValue.setPosition(rightX, topY + statsH * 0.62);
       },
 
       updateProgress: function (completed, total) {

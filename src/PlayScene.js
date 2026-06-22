@@ -12,7 +12,8 @@ class PlayScene extends Phaser.Scene {
     this.attempts = 0;
     this.baseDuration = 1400;
     this.minDuration = 450;
-    this.speedMultiplier = 0.92;
+    this.maxSpeedAtScore = 30;
+    this.speedMultiplier = Math.pow(this.minDuration / this.baseDuration, 1 / this.maxSpeedAtScore);
     this.isStopped = false;
     this.gameEnded = false;
     this.zoneCenter = 0.5;
@@ -135,7 +136,6 @@ class PlayScene extends Phaser.Scene {
   onHit() {
     this.score += 1;
     this.sportsHud.scoreValue.setText(String(this.score));
-    this.showFeedback('GOAL!', SportsConfig.colors.textGreen);
     this.playHitEffects();
 
     YouTubeBridge.onRoundScoreChanged(this.score);
@@ -151,7 +151,6 @@ class PlayScene extends Phaser.Scene {
 
   onMiss() {
     this.gameEnded = true;
-    this.showFeedback('MISS!', '#ff6b6b');
     this.ballMarker.setMissColor();
     this.playMissEffects();
 
@@ -238,23 +237,10 @@ class PlayScene extends Phaser.Scene {
     this.sportsTrack = SportsVisuals.createTrack(this);
     this.ballMarker = SportsVisuals.createBallMarker(this, MobileLayout.s(46, h));
 
-    this.feedbackText = this.add.text(0, 0, '', UI.textStyle({
-      fontSize: MobileLayout.fontSize(40, h),
-      fontStyle: 'bold',
-    })).setOrigin(0.5).setAlpha(0).setDepth(60);
-
-    this.comboText = this.add.text(0, 0, '', UI.textStyle({
-      fontSize: MobileLayout.fontSize(26, h),
-      fontStyle: 'bold',
-      color: SportsConfig.colors.textGold,
-    })).setOrigin(0.5).setAlpha(0).setScale(0.8).setDepth(60);
-
     this.playGroup.add([
       this.sportsTrack.laneContainer,
       this.sportsTrack.zoneContainer,
       this.ballMarker.container,
-      this.feedbackText,
-      this.comboText,
     ]);
 
     this.muteButton = UI.createMuteButton(this, 0, 0);
@@ -303,9 +289,6 @@ class PlayScene extends Phaser.Scene {
     const speedY = this.trackTop - MobileLayout.s(SportsConfig.visual.speedAboveTrack, height, width);
     this.speedBadge.layout(centerX, speedY);
 
-    this.feedbackText.setPosition(centerX, speedY - MobileLayout.s(36, height, width));
-    this.comboText.setPosition(centerX, speedY - MobileLayout.s(18, height, width));
-
     UI.layoutMuteButton(this.muteButton, safe, width, height, 'bottom-left');
 
     this.refreshTrackVisuals();
@@ -336,7 +319,10 @@ class PlayScene extends Phaser.Scene {
   updateSportsHUD() {
     this.sportsHud.scoreValue.setText(String(this.score));
     this.sportsHud.bestValue.setText(String(Storage.getBestScore()));
-    this.sportsHud.roundValue.setText(String(this.score + 1));
+    this.sportsHud.streakValue.setText(String(this.score));
+    this.sportsHud.streakValue.setColor(
+      this.score >= 2 ? SportsConfig.colors.textGold : SportsConfig.colors.textWhite
+    );
     this.sportsHud.updateProgress(
       Math.min(this.score, SportsConfig.progressDotCount),
       SportsConfig.progressDotCount
@@ -347,44 +333,14 @@ class PlayScene extends Phaser.Scene {
     this.speedBadge.setMultiplier(this.getSpeedMultiplier());
   }
 
-  updateComboDisplay() {
-    if (this.score >= 2) {
-      this.comboText.setText('🔥 ' + this.score + ' streak');
-      this.tweens.add({
-        targets: this.comboText,
-        alpha: 1,
-        scale: 1,
-        duration: 180,
-        ease: 'Back.easeOut',
-      });
-    } else {
-      this.comboText.setAlpha(0);
-      this.comboText.setScale(0.8);
-    }
-  }
-
-  showFeedback(message, color) {
-    this.feedbackText.setText(message);
-    this.feedbackText.setColor(typeof color === 'string' ? color : '#ffffff');
-    this.feedbackText.setAlpha(1);
-    this.feedbackText.setScale(0.75);
-
-    this.tweens.add({
-      targets: this.feedbackText,
-      scale: 1.08,
-      alpha: 0,
-      duration: 520,
-      delay: 160,
-      ease: 'Quad.easeOut',
-    });
-  }
-
   playHitEffects() {
     SoundManager.playSuccess();
     FX.screenFlash(this, SportsConfig.colors.neonGreen, 160, 0.18);
     FX.hitParticles(this, this.ballMarker.container.x, this.ballMarker.container.y);
-    this.updateComboDisplay();
     SportsVisuals.animateScorePop(this, this.sportsHud.scoreValue);
+    if (this.score >= 2) {
+      SportsVisuals.animateScorePop(this, this.sportsHud.streakValue);
+    }
     this.updateSportsHUD();
   }
 
